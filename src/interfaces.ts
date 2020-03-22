@@ -1,0 +1,242 @@
+import {
+  Client,
+  GuildChannel,
+  Guild,
+  Snowflake,
+  Message,
+  StringResolvable,
+  MessageEditOptions,
+  MessageEmbed,
+} from 'discord.js';
+import Collection from '@discordjs/collection';
+
+import { IConfig } from './bot.config';
+import { Command, CooldownManager } from './modules';
+import { BotClient } from './bot-client';
+
+export type Overwrite<T, U> = Pick<T, Exclude<keyof T, keyof U>> & U;
+
+interface ExtendedClient {
+  // Base
+  config: IConfig;
+
+  // Info
+  memory: number;
+  version: string;
+  userCount: number;
+  serverCount: number;
+
+  // Stores
+  commands: Collection<string, Command>;
+  aliases: Collection<string, string>;
+  cooldowns: CooldownManager;
+
+  // Utility methods
+  permlevel(message: IBotMessage): number;
+  clean(text: string): Promise<string>;
+  wait(time: number): Promise<void>;
+  randInt(min: number, max: number): number;
+  colorInt(hex: string): number;
+  getChannelsInMessage(message: IBotMessage): Promise<GuildChannel[]>;
+  lines(...lines: string[]): string;
+  appendMsg(msg: IBotMessage, content: string, delay?: number): Promise<IBotMessage>;
+  loadCommand(command: Command): Promise<void>;
+  // unloadCommand(commandName: string): Promise<void>;
+
+  // Helper functions will also go into .helpers for semanticness.
+  helpers: {
+    wait: ExtendedClient['wait'];
+    randInt: ExtendedClient['randInt'];
+    colorInt: ExtendedClient['colorInt'];
+    getChannelsInMessage: ExtendedClient['getChannelsInMessage'];
+    lines: ExtendedClient['lines'];
+    appendMsg: ExtendedClient['appendMsg'];
+  };
+
+  // A cache of client permissions for pretty perm names in commands.
+  permLevelCache: {
+    [key: string]: number;
+  };
+
+  // The login function is changed
+  // login(TOKEN: string): Promise<{ [key: string]: any }>;
+}
+
+export interface IBotClient extends Overwrite<Client, ExtendedClient> {}
+
+export interface IBotMessage
+  extends Overwrite<
+    Message,
+    {
+      client: IBotClient;
+      edit(
+        content: StringResolvable,
+        options?: MessageEditOptions | MessageEmbed,
+      ): Promise<IBotMessage>;
+    }
+  > {}
+
+export type CombinedMeta<T> = CommandMetadata & T;
+
+export interface ICommandOptions<T> {
+  /**
+   * The command name.
+   */
+  name: string;
+  /**
+   * The command description.
+   */
+  description: string;
+  /**
+   * How to use the command. Will appear as (prefix)(command name)(usage). Ex: !hello [name] if usage is "[name]"
+   */
+  usage?: string;
+  /**
+   * Examples of the command being used.
+   */
+  examples?: string[];
+  /**
+   * The text displayed when the user uses (prefix)help [command name]
+   */
+  help?: string;
+  /**
+   * The category of this command.
+   */
+  category?: string;
+  /**
+   * Alternative names for this command.
+   */
+  aliases?: string[];
+  /**
+   * The permission level required to use this command.
+   * TODO: Implement this
+   */
+  permission: number;
+  /**
+   * How long in seconds an user has to wait to use this command again.
+   */
+  cooldown?: number;
+  /**
+   * Where this command can be run. Possible values: "text", "dm".
+   */
+  runIn?: ('text' | 'dm' | 'guild')[];
+  /**
+   * If true only super users can use this command.
+   */
+  hidden?: boolean;
+  /**
+   * List of required arguments. The length of this array will be the number of required arguments and the values will be the arg names.
+   */
+  requiredArgs?: string[];
+  /**
+   * Wether the message that called this command should be deleted. Note: bot needs the appropriate permissions.
+   */
+  delete?: boolean;
+  /**
+   * The function that will be executed when the command is called.
+   * @param {IBotClient} bot The bot client.
+   * @param {IBotMessage} message The message that called this command.
+   * @param {string[]} args The args this command was called with.
+   * @param {number} level The permission level.
+   */
+  run(bot: BotClient, message: IBotMessage, meta: CombinedMeta<T>): any;
+  /**
+   * The init function will be called when the command is loaded.
+   */
+  init?(bot: IBotClient): void;
+  /**
+   * The shutdown function will be called when the command is unloaded.
+   */
+  shutdown?(bot: IBotClient): void;
+  /**
+   * Use it to send messages back to the channel and safely log any errors.
+   */
+  send?(...args: any): Promise<void | IBotMessage>;
+}
+
+export interface CommandMetadata {
+  /**
+   * The id of the user that called the command.
+   */
+  userId: Snowflake;
+  /**
+   * The user's tag.
+   * Ex: ExamplePerson#5555
+   */
+  tag: string | null;
+  /**
+   * The username of the user.
+   * Ex: ExamplePerson
+   */
+  username: string;
+  /**
+   * The user's nickname in this guild if they have one.
+   */
+  nickname: string | null;
+  /**
+   * The guild this message was sent to.
+   */
+  guild: Guild | null;
+  /**
+   * The command that was called.
+   */
+  command: Command | null;
+  /**
+   * The name of the command called.
+   */
+  commandName: string | null;
+  /**
+   * The prefix used to call this command.
+   */
+  prefix: string | false;
+  /**
+   * The content after the command name. Or after the last argument if the command expects arguments.
+   * If the command was "!hello there my friend" and the command expects 1 argument content will be "my friend"
+   */
+  content: string;
+  /**
+   * Same as content but with args included.
+   */
+  contentFull: string;
+  /**
+   * The arguments the command was called with.
+   */
+  args: string[];
+  /**
+   * The first missing argument if not enough arguments.
+   */
+  missingArg: string | null;
+  /**
+   * Was the command called from a dm?
+   */
+  isDM: boolean;
+  /**
+   * Permission level of the user that called the command.
+   */
+  permLevel: number;
+  /**
+   * Was the command called through an alias?
+   */
+  calledByAlias: boolean;
+  /**
+   * The message associated with this call.
+   */
+  message: IBotMessage;
+  /**
+   * When the command was called.
+   */
+  time: Date;
+}
+
+export type IEventHandler = (bot: IBotClient) => void;
+
+export enum Permission {
+  USER = 0,
+  MANAGE_MESSAGES = 2,
+  MANAGE_ROLES = 3,
+  MANAGE_GUILD = 4,
+  SERVER_OWNER = 5,
+  BOT_SUPPORT = 8,
+  BOT_ADMIN = 9,
+  BOT_OWNER = 10,
+}
