@@ -4,6 +4,11 @@ import { IConfig } from './bot.config';
 import { Command, CooldownManager } from './modules';
 import { BotClient } from './bot-client';
 export declare type Overwrite<T, U> = Pick<T, Exclude<keyof T, keyof U>> & U;
+export declare type OmitPropertiesOfType<T, U> = {
+    [K in keyof T]: T[K] extends U ? K : never;
+}[keyof T];
+export declare type FunctionPropertyNames<T> = OmitPropertiesOfType<T, Function>;
+export declare type NonFunction<T> = Omit<T, FunctionPropertyNames<T>>;
 interface ExtendedClient {
     config: IConfig;
     memory: number;

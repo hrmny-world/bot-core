@@ -17,6 +17,9 @@ import { Command, CooldownManager } from './modules';
 import { BotClient } from './bot-client';
 
 export type Overwrite<T, U> = Pick<T, Exclude<keyof T, keyof U>> & U;
+export type OmitPropertiesOfType<T, U> = { [K in keyof T]: T[K] extends U ? K : never }[keyof T];
+export type FunctionPropertyNames<T> = OmitPropertiesOfType<T, Function>;
+export type NonFunction<T> = Omit<T, FunctionPropertyNames<T>>;
 
 interface ExtendedClient {
   // Base
