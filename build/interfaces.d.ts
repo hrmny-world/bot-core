@@ -1,4 +1,4 @@
-import { Client, GuildChannel, Guild, Snowflake, Message, StringResolvable, MessageEditOptions, MessageEmbed } from 'discord.js';
+import { Client, GuildChannel, Guild, Snowflake, Message, StringResolvable, MessageEditOptions, MessageEmbed, MessageOptions, MessageAdditions } from 'discord.js';
 import Collection from '@discordjs/collection';
 import { IConfig } from './bot.config';
 import { Command, CooldownManager } from './modules';
@@ -42,6 +42,8 @@ export interface IBotMessage extends Overwrite<Message, {
 }> {
 }
 export declare type CombinedMeta<T> = CommandMetadata & T;
+declare type ISendFnLastArg = string | MessageOptions | MessageAdditions;
+declare type ISendFnReturn = Promise<void | IBotMessage>;
 export interface ICommandOptions<T> {
     name: string;
     description: string;
@@ -59,7 +61,17 @@ export interface ICommandOptions<T> {
     run(bot: BotClient, message: IBotMessage, meta: CombinedMeta<T>): any;
     init?(bot: IBotClient): void;
     shutdown?(bot: IBotClient): void;
-    send?(...args: any): Promise<void | IBotMessage>;
+    send?(arg1: any): ISendFnReturn;
+    send?(arg1: any, options: ISendFnLastArg): ISendFnReturn;
+    send?(arg1: any, arg2: any, options: ISendFnLastArg): ISendFnReturn;
+    send?(arg1: any, arg2: any, arg3: any, options: ISendFnLastArg): ISendFnReturn;
+    send?(arg1: any, arg2: any, arg3: any, arg4: any, options: ISendFnLastArg): ISendFnReturn;
+    send?(arg1: any, arg2: any, arg3: any, arg4: any, arg5: any, options: ISendFnLastArg): ISendFnReturn;
+    send?(arg1: any, arg2: any, arg3: any, arg4: any, arg5: any, arg6: any, options: ISendFnLastArg): ISendFnReturn;
+    send?(arg1: any, arg2: any, arg3: any, arg4: any, arg5: any, arg6: any, arg7: any, options: ISendFnLastArg): ISendFnReturn;
+    send?(arg1: any, arg2: any, arg3: any, arg4: any, arg5: any, arg6: any, arg7: any, arg8: any, options: ISendFnLastArg): ISendFnReturn;
+    send?(arg1: any, arg2: any, arg3: any, arg4: any, arg5: any, arg6: any, arg7: any, arg8: any, arg9: any, options: ISendFnLastArg): ISendFnReturn;
+    send?(arg1: any, arg2: any, arg3: any, arg4: any, arg5: any, arg6: any, arg7: any, arg8: any, arg9: any, arg10: any, options: ISendFnLastArg): ISendFnReturn;
 }
 export interface CommandMetadata {
     userId: Snowflake;

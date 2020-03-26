@@ -7,6 +7,8 @@ import {
   StringResolvable,
   MessageEditOptions,
   MessageEmbed,
+  MessageOptions,
+  MessageAdditions,
 } from 'discord.js';
 import Collection from '@discordjs/collection';
 
@@ -57,9 +59,6 @@ interface ExtendedClient {
   permLevelCache: {
     [key: string]: number;
   };
-
-  // The login function is changed
-  // login(TOKEN: string): Promise<{ [key: string]: any }>;
 }
 
 export interface IBotClient extends Overwrite<Client, ExtendedClient> {}
@@ -77,6 +76,9 @@ export interface IBotMessage
   > {}
 
 export type CombinedMeta<T> = CommandMetadata & T;
+
+type ISendFnLastArg = string | MessageOptions | MessageAdditions;
+type ISendFnReturn = Promise<void | IBotMessage>;
 
 export interface ICommandOptions<T> {
   /**
@@ -151,7 +153,76 @@ export interface ICommandOptions<T> {
   /**
    * Use it to send messages back to the channel and safely log any errors.
    */
-  send?(...args: any): Promise<void | IBotMessage>;
+  send?(arg1: any): ISendFnReturn;
+  // this mess will be here until typescript allows for explicit last parameter typing
+  send?(arg1: any, options: ISendFnLastArg): ISendFnReturn;
+  send?(arg1: any, arg2: any, options: ISendFnLastArg): ISendFnReturn;
+  send?(arg1: any, arg2: any, arg3: any, options: ISendFnLastArg): ISendFnReturn;
+  send?(arg1: any, arg2: any, arg3: any, arg4: any, options: ISendFnLastArg): ISendFnReturn;
+  send?(
+    arg1: any,
+    arg2: any,
+    arg3: any,
+    arg4: any,
+    arg5: any,
+    options: ISendFnLastArg,
+  ): ISendFnReturn;
+  send?(
+    arg1: any,
+    arg2: any,
+    arg3: any,
+    arg4: any,
+    arg5: any,
+    arg6: any,
+    options: ISendFnLastArg,
+  ): ISendFnReturn;
+  send?(
+    arg1: any,
+    arg2: any,
+    arg3: any,
+    arg4: any,
+    arg5: any,
+    arg6: any,
+    arg7: any,
+    options: ISendFnLastArg,
+  ): ISendFnReturn;
+  send?(
+    arg1: any,
+    arg2: any,
+    arg3: any,
+    arg4: any,
+    arg5: any,
+    arg6: any,
+    arg7: any,
+    arg8: any,
+    options: ISendFnLastArg,
+  ): ISendFnReturn;
+  send?(
+    arg1: any,
+    arg2: any,
+    arg3: any,
+    arg4: any,
+    arg5: any,
+    arg6: any,
+    arg7: any,
+    arg8: any,
+    arg9: any,
+    options: ISendFnLastArg,
+  ): ISendFnReturn;
+  send?(
+    arg1: any,
+    arg2: any,
+    arg3: any,
+    arg4: any,
+    arg5: any,
+    arg6: any,
+    arg7: any,
+    arg8: any,
+    arg9: any,
+    arg10: any,
+    options: ISendFnLastArg,
+  ): ISendFnReturn;
+  // send?(...args: any): sendFnReturn;
 }
 
 export interface CommandMetadata {
