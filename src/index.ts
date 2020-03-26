@@ -1,4 +1,5 @@
 // export * from './interfaces';
+export * from './helpers';
 export {
   ICommandOptions,
   CommandMetadata,

@@ -1,3 +1,4 @@
+export * from './helpers';
 export { ICommandOptions, CommandMetadata, IBotClient, IBotMessage, IEventHandler, Overwrite, Permission, } from './interfaces';
 export * from './bot.config';
 export { Command, CooldownManager, FileLoader, buildCommandMetadata, splitArguments, validatePrefix, } from './modules';
