@@ -4,8 +4,9 @@ import Collection from '@discordjs/collection';
 
 import { IBotClient, IEventHandler, IBotMessage } from './interfaces';
 import { IConfig } from './bot.config';
-import { FileLoader, Command, CooldownManager } from './modules';
+import { FileLoader, Command, CooldownManager, ChannelWatcher } from './modules';
 import { IPrefixChecker, ICommandExtenders, IMetaExtender, commandRunner } from './events/message';
+import * as events from './events';
 // import { webServer } from './web';
 
 export class BotClient extends Client implements IBotClient {
@@ -14,6 +15,7 @@ export class BotClient extends Client implements IBotClient {
   aliases: IBotClient['aliases'];
   permLevelCache: IBotClient['permLevelCache'];
   cooldowns: IBotClient['cooldowns'];
+  channelWatchers: IBotClient['channelWatchers'];
   extensions: ICommandExtenders;
   constructor(config: IConfig, options: ClientOptions = { disableMentions: 'everyone' }) {
     super(options);
@@ -25,6 +27,7 @@ export class BotClient extends Client implements IBotClient {
     this.commands = new Collection();
     this.aliases = new Collection();
     this.cooldowns = new CooldownManager(this);
+    this.channelWatchers = new Collection<string, ChannelWatcher>();
 
     const permLevelCache: { [key: string]: number } = {};
     for (let i = 0; i < this.config.permLevels.length; i++) {
@@ -231,6 +234,11 @@ export class BotClient extends Client implements IBotClient {
 
     // Listen to commands
     this.on('message', commandRunner(this.extensions, this));
+
+    // Channel Watcher events
+    for (const [eventName, eventHandler] of Object.entries(events)) {
+      this.on(eventName, (eventHandler as IEventHandler).bind(null, this));
+    }
 
     // call Discord.Client's login()
     return super.login(token);

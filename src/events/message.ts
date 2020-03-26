@@ -14,6 +14,16 @@ export interface ICommandExtenders {
 export const commandRunner = (extensions: ICommandExtenders, bot: BotClient) => async (
   message: IBotMessage,
 ) => {
+  // Channel watchers
+  bot.setImmediate(() => {
+    bot.channelWatchers.forEach(watcher => {
+      if (message.channel.id !== watcher.channelId) return;
+      watcher._channelEventHappened('message', { message, channel: message.channel });
+    });
+  });
+
+  // Command handling
+
   // Don't answer to bots
   if (message.author.bot) return;
 

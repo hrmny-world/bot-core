@@ -10,6 +10,7 @@ export declare class BotClient extends Client implements IBotClient {
     aliases: IBotClient['aliases'];
     permLevelCache: IBotClient['permLevelCache'];
     cooldowns: IBotClient['cooldowns'];
+    channelWatchers: IBotClient['channelWatchers'];
     extensions: ICommandExtenders;
     constructor(config: IConfig, options?: ClientOptions);
     wait: typeof setTimeout.__promisify__;

@@ -13,7 +13,7 @@ import {
 import Collection from '@discordjs/collection';
 
 import { IConfig } from './bot.config';
-import { Command, CooldownManager } from './modules';
+import { Command, CooldownManager, ChannelWatcher } from './modules';
 import { BotClient } from './bot-client';
 
 export type Overwrite<T, U> = Pick<T, Exclude<keyof T, keyof U>> & U;
@@ -35,6 +35,7 @@ interface ExtendedClient {
   commands: Collection<string, Command>;
   aliases: Collection<string, string>;
   cooldowns: CooldownManager;
+  channelWatchers: Collection<string, ChannelWatcher>;
 
   // Utility methods
   permlevel(message: IBotMessage): number;

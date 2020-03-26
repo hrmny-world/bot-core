@@ -11,12 +11,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const util_1 = require("util");
 const discord_js_1 = require("discord.js");
 const collection_1 = __importDefault(require("@discordjs/collection"));
 const modules_1 = require("./modules");
 const message_1 = require("./events/message");
+const events = __importStar(require("./events"));
 class BotClient extends discord_js_1.Client {
     constructor(config, options = { disableMentions: 'everyone' }) {
         super(options);
@@ -99,6 +107,7 @@ class BotClient extends discord_js_1.Client {
         this.commands = new collection_1.default();
         this.aliases = new collection_1.default();
         this.cooldowns = new modules_1.CooldownManager(this);
+        this.channelWatchers = new collection_1.default();
         const permLevelCache = {};
         for (let i = 0; i < this.config.permLevels.length; i++) {
             const thisLevel = this.config.permLevels[i];
@@ -182,6 +191,9 @@ class BotClient extends discord_js_1.Client {
             yield this._loadEventsIntoClient();
             this.cooldowns.loadCommands(this.commands);
             this.on('message', message_1.commandRunner(this.extensions, this));
+            for (const [eventName, eventHandler] of Object.entries(events)) {
+                this.on(eventName, eventHandler.bind(null, this));
+            }
             return _super.login.call(this, token);
         });
     }

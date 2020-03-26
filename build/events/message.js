@@ -13,6 +13,13 @@ const __1 = require("..");
 const util_1 = require("../util");
 exports.commandRunner = (extensions, bot) => (message) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e, _f;
+    bot.setImmediate(() => {
+        bot.channelWatchers.forEach(watcher => {
+            if (message.channel.id !== watcher.channelId)
+                return;
+            watcher._channelEventHappened('message', { message, channel: message.channel });
+        });
+    });
     if (message.author.bot)
         return;
     let prefix = false;

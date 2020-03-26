@@ -8,6 +8,10 @@ export {
   IEventHandler,
   Overwrite,
   Permission,
+  CombinedMeta,
+  FunctionPropertyNames,
+  NonFunction,
+  OmitPropertiesOfType,
 } from './interfaces';
 export * from './bot.config';
 export {
@@ -17,6 +21,9 @@ export {
   buildCommandMetadata,
   splitArguments,
   validatePrefix,
+  ChannelDiff,
+  ChannelWatcher,
+  ChannelWatcherEvents,
 } from './modules';
 export { BotClient } from './bot-client';
 export { default as defaultCommands } from './commands';

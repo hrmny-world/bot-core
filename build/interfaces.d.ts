@@ -1,7 +1,7 @@
 import { Client, GuildChannel, Guild, Snowflake, Message, StringResolvable, MessageEditOptions, MessageEmbed, MessageOptions, MessageAdditions } from 'discord.js';
 import Collection from '@discordjs/collection';
 import { IConfig } from './bot.config';
-import { Command, CooldownManager } from './modules';
+import { Command, CooldownManager, ChannelWatcher } from './modules';
 import { BotClient } from './bot-client';
 export declare type Overwrite<T, U> = Pick<T, Exclude<keyof T, keyof U>> & U;
 export declare type OmitPropertiesOfType<T, U> = {
@@ -18,6 +18,7 @@ interface ExtendedClient {
     commands: Collection<string, Command>;
     aliases: Collection<string, string>;
     cooldowns: CooldownManager;
+    channelWatchers: Collection<string, ChannelWatcher>;
     permlevel(message: IBotMessage): number;
     clean(text: string): Promise<string>;
     wait(time: number): Promise<void>;

@@ -1,4 +1,7 @@
 "use strict";
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -14,3 +17,4 @@ exports.buildCommandMetadata = command_1.buildCommandMetadata;
 exports.splitArguments = command_1.splitArguments;
 exports.validatePrefix = command_1.validatePrefix;
 exports.FileLoader = __importStar(require("./file-loader"));
+__export(require("./channel-watcher"));

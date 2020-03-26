@@ -13,6 +13,7 @@ exports.FileLoader = modules_1.FileLoader;
 exports.buildCommandMetadata = modules_1.buildCommandMetadata;
 exports.splitArguments = modules_1.splitArguments;
 exports.validatePrefix = modules_1.validatePrefix;
+exports.ChannelWatcher = modules_1.ChannelWatcher;
 var bot_client_1 = require("./bot-client");
 exports.BotClient = bot_client_1.BotClient;
 var commands_1 = require("./commands");
