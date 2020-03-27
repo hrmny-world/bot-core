@@ -5,7 +5,7 @@
   "main": "./build/index.js",
   "scripts": {
     "start": "node build/bot.js",
-    "test": "tsc --noEmit --pretty && npm run lint && echo \"LOOKS LIKE EVERYTHING IS GOOD! 💚\"",
+    "test": "tsc --noEmit --pretty && jest && npm run lint && echo \"LOOKS LIKE EVERYTHING IS GOOD! 💚\"",
     "prebuild": "rimraf build",
     "build": "tsc",
     "lint": "eslint ./src/**/*.ts",
@@ -35,6 +35,7 @@
   "devDependencies": {
     "@types/app-root-path": "^1.2.4",
     "@types/express": "^4.17.3",
+    "@types/jest": "^25.1.4",
     "@types/lodash.merge": "^4.6.6",
     "@types/minimatch": "^3.0.3",
     "@types/moment-duration-format": "^2.2.2",
