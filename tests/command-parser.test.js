@@ -11,6 +11,10 @@ describe('command parser', () => {
     const defaultPrefix = '>';
     const customPrefixesMap = new Map([['a guild id', { prefix: '$' }]]);
 
+    test('should be defined', () => {
+      expect(validatePrefix).toBeDefined();
+    });
+
     test('return truthy if correct default prefix', () => {
       const message = { content: '>hello there' };
       expect(validatePrefix(message, defaultPrefix)).toBeTruthy();
@@ -42,8 +46,10 @@ describe('command parser', () => {
   });
 
   describe('split arguments', () => {
-    // command
-    // args
+    test('should be defined', () => {
+      expect(splitArguments).toBeDefined();
+    });
+    
     test('empty string should yield empty command and args', () => {
       expect(splitArguments('', '>')).toEqual({ command: '', args: [] });
     });
