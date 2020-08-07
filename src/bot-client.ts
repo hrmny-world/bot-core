@@ -1,5 +1,5 @@
 import { promisify, inspect } from 'util';
-import { Client, GuildChannel, ClientOptions } from 'discord.js';
+import { Client, GuildChannel, ClientOptions, ClientEvents } from 'discord.js';
 import Collection from '@discordjs/collection';
 
 import { IBotClient, IEventHandler, IBotMessage } from './interfaces';
@@ -76,15 +76,15 @@ export class BotClient extends Client implements IBotClient {
     if (!message.guild) return [];
     if (channelsInMessage.length === 0) return [];
 
-    const channelsInGuild = message.guild.channels.cache.filter(c => c.type === 'text');
+    const channelsInGuild = message.guild.channels.cache.filter((c) => c.type === 'text');
 
     const channels = channelsInMessage
       // remove duplicates
       .filter((v, i, a) => a.indexOf(v) === i)
       // get the channels
-      .map(channelId => channelsInGuild.get(channelId))
+      .map((channelId) => channelsInGuild.get(channelId))
       // remove falsy values
-      .filter(c => c !== undefined) as GuildChannel[];
+      .filter((c) => c !== undefined) as GuildChannel[];
 
     return channels;
   };
@@ -148,7 +148,7 @@ export class BotClient extends Client implements IBotClient {
   }
 
   get userCount() {
-    return this.users.cache.filter(u => !u.bot).size;
+    return this.users.cache.filter((u) => !u.bot).size;
   }
 
   get serverCount() {
@@ -168,11 +168,11 @@ export class BotClient extends Client implements IBotClient {
         command.init(this);
       }
       this.commands.set(command.name, command);
-      command.aliases?.forEach(alias => {
+      command.aliases?.forEach((alias) => {
         this.aliases.set(alias, command.name);
       });
     } catch (e) {
-      this.emit('error', `Unable to load command ${command.name}: ${e}`);
+      this.emit('error', new Error(`Unable to load command ${command.name}: ${e}`));
     }
   }
 
@@ -187,7 +187,7 @@ export class BotClient extends Client implements IBotClient {
     });
 
     // Promise.all for performance
-    await Promise.all([...cmdFiles.map(cmd => this.loadCommand(cmd as any))]);
+    await Promise.all([...cmdFiles.map((cmd) => this.loadCommand(cmd as any))]);
   }
 
   private async _loadEventsIntoClient() {
@@ -199,15 +199,22 @@ export class BotClient extends Client implements IBotClient {
       useTypescript,
     });
 
-    evtFiles.forEach(filePath => {
+    evtFiles.forEach((filePath) => {
       const splits = filePath.split(/(\/|\\)/g);
       const eventName = splits[splits.length - 1].split('.')[0];
-      const event: IEventHandler = module.require(filePath.replace(__dirname, './'))?.default;
-      if (event) {
+      const requiredEventModule = module.require(filePath.replace(__dirname, './'));
+
+      let event: IEventHandler;
+      if (requiredEventModule && typeof requiredEventModule === 'function') {
+        event = requiredEventModule;
+      } else if (requiredEventModule && typeof requiredEventModule.default === 'function') {
+        event = requiredEventModule.default;
+      }
+
+      if (event!) {
         // Bind the client to any event, before the existing arguments
         // provided by the discord.js event.
-        // This line is awesome by the way. Just sayin'.
-        this.on(eventName, event.bind(null, this));
+        this.on(eventName as keyof ClientEvents, event!.bind(null, this));
       }
     });
   }
@@ -233,11 +240,16 @@ export class BotClient extends Client implements IBotClient {
     this.cooldowns.loadCommands(this.commands);
 
     // Listen to commands
-    this.on('message', commandRunner(this.extensions, this));
+    this.on(
+      'message',
+      (commandRunner(this.extensions, this) as unknown) as (
+        ...args: ClientEvents['message']
+      ) => void,
+    );
 
     // Channel Watcher events
     for (const [eventName, eventHandler] of Object.entries(events)) {
-      this.on(eventName, (eventHandler as IEventHandler).bind(null, this));
+      this.on(eventName as keyof ClientEvents, (eventHandler as IEventHandler).bind(null, this));
     }
 
     // call Discord.Client's login()
