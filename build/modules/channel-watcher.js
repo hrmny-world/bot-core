@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ChannelWatcher = void 0;
 const events_1 = require("events");
 const collection_1 = __importDefault(require("@discordjs/collection"));
 const deep_object_diff_1 = require("deep-object-diff");
@@ -25,48 +26,58 @@ class ChannelWatcher extends events_1.EventEmitter {
         this.fetchChannel();
     }
     _channelEventHappened(event, data) {
-        var _a;
+        var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
-            switch (event) {
-                case 'channelDelete':
-                    this.emit('deleted', { channel: data.channel });
-                    this.destroy();
-                    break;
-                case 'channelPinsUpdate':
-                    const channel = data.channel;
-                    const newPins = (yield channel.messages.fetchPinned());
-                    this.emit('pins', { oldPins: (_a = this.oldPins) !== null && _a !== void 0 ? _a : new collection_1.default(), newPins });
-                    this.latestState = data.channel;
-                    this.oldPins = newPins;
-                    break;
-                case 'channelUpdate':
-                    const difference = deep_object_diff_1.diff(data.oldChannel, data.newChannel);
-                    this.emit('update', difference);
-                    break;
-                case 'messageDelete':
-                    this.emit('message-delete', data);
-                    break;
-                case 'messageDeleteBulk':
-                    this.emit('message-delete', data);
-                    break;
-                case 'messageReactionAdd':
-                    this.emit('reaction-add', data);
-                    break;
-                case 'messageReactionRemove':
-                    this.emit('reaction-remove', data);
-                    break;
-                case 'messageReactionRemoveAll':
-                    this.emit('reaction-remove-all', data);
-                    break;
-                case 'message':
-                    this.emit('message', data);
-                    break;
-                case 'typingStart':
-                    this.emit('typing', data);
-                    break;
-                default:
-                    this.bot.emit('warn', `Weird event sent to _channelEventHappened of ${this.guildId}:${this.channelId} => ${event}`);
-                    return;
+            try {
+                switch (event) {
+                    case 'channelDelete':
+                        this.emit('deleted', { channel: data.channel });
+                        this.destroy();
+                        break;
+                    case 'channelPinsUpdate':
+                        const channel = data.channel;
+                        const newPins = (yield channel.messages.fetchPinned());
+                        this.emit('pins', { oldPins: (_a = this.oldPins) !== null && _a !== void 0 ? _a : new collection_1.default(), newPins });
+                        this.latestState = data.channel;
+                        this.oldPins = newPins;
+                        break;
+                    case 'channelUpdate':
+                        const difference = deep_object_diff_1.diff(data.oldChannel, data.newChannel);
+                        this.emit('update', difference);
+                        break;
+                    case 'messageDelete':
+                        this.emit('message-delete', data);
+                        break;
+                    case 'messageDeleteBulk':
+                        this.emit('message-delete', data);
+                        break;
+                    case 'messageReactionAdd':
+                        this.emit('reaction-add', data);
+                        break;
+                    case 'messageReactionRemove':
+                        this.emit('reaction-remove', data);
+                        break;
+                    case 'messageReactionRemoveAll':
+                        this.emit('reaction-remove-all', data);
+                        break;
+                    case 'message':
+                        this.emit('message', data);
+                        break;
+                    case 'typingStart':
+                        this.emit('typing', data);
+                        break;
+                    default:
+                        this.bot.emit('warn', `Weird event sent to _channelEventHappened of ${this.guildId}:${this.channelId} => ${event}`);
+                        return;
+                }
+            }
+            catch (err) {
+                const errorMsg = (_b = err.stack) === null || _b === void 0 ? void 0 : _b.replace(new RegExp(`${(_c = this.bot.config.root) !== null && _c !== void 0 ? _c : __dirname}/`, 'g'), './');
+                err.stack =
+                    `Channel watcher error.\n` +
+                        this.bot.helpers.lines(`Could not send message.`, `Channel: ${this.channelId}`, `Guild: ${this.guildId}`, `Event: ${event}`, 'Data:', JSON.stringify(data, null, 2), errorMsg) +
+                        err.stack;
+                this.bot.emit('error', err);
             }
         });
     }

@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ping = exports.info = exports.help = exports.botInvite = exports.repeat = exports.eval = void 0;
 const eval_1 = __importDefault(require("./admin/maintenance/eval"));
 exports.eval = eval_1.default;
 const repeat_1 = __importDefault(require("./admin/maintenance/repeat"));

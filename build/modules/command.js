@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.CooldownManager = exports.buildCommandMetadata = exports.validatePrefix = exports.splitArguments = exports.Command = void 0;
 const interfaces_1 = require("../interfaces");
 const collection_1 = __importDefault(require("@discordjs/collection"));
 class Command {

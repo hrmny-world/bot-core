@@ -48,7 +48,8 @@ export interface ChannelWatcherEvents {
 }
 declare type WatchedChannel = DMChannel & GuildChannel;
 export declare type ChannelDiff = Partial<NonFunction<WatchedChannel>>;
-declare const ChannelWatcher_base: new () => StrictEventEmitter<EventEmitter, ChannelWatcherEvents, ChannelWatcherEvents, "addEventListener" | "removeEventListener", "removeListener" | "addListener" | "emit" | "on" | "once">;
+declare type ChannelWatcherEmitter = StrictEventEmitter<EventEmitter, ChannelWatcherEvents>;
+declare const ChannelWatcher_base: new () => ChannelWatcherEmitter;
 export declare class ChannelWatcher extends ChannelWatcher_base {
     bot: BotClient;
     guildId: Snowflake;

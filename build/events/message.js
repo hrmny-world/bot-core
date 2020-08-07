@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.commandRunner = void 0;
 const __1 = require("..");
 const util_1 = require("../util");
 exports.commandRunner = (extensions, bot) => (message) => __awaiter(void 0, void 0, void 0, function* () {

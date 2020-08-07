@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.voteWebhook = void 0;
 exports.voteWebhook = (bot, req, res) => {
     const auth = req.get('Authorization');
     if (!auth || auth !== process.env.VOTE_WEBHOOK_PASS) {

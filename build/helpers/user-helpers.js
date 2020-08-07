@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getPersonName = void 0;
 const discord_js_1 = require("discord.js");
 const bot_client_1 = require("../bot-client");
 function getPersonName(search, client) {

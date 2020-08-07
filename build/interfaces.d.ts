@@ -1,4 +1,4 @@
-import { Client, GuildChannel, Guild, Snowflake, Message, StringResolvable, MessageEditOptions, MessageEmbed, MessageOptions, MessageAdditions } from 'discord.js';
+import { Client, GuildChannel, Guild, Snowflake, Message, StringResolvable, MessageEditOptions, MessageEmbed, MessageOptions, MessageAdditions, ClientEvents } from 'discord.js';
 import Collection from '@discordjs/collection';
 import { IConfig } from './bot.config';
 import { Command, CooldownManager, ChannelWatcher } from './modules';
@@ -11,6 +11,7 @@ export declare type FunctionPropertyNames<T> = OmitPropertiesOfType<T, Function>
 export declare type NonFunction<T> = Omit<T, FunctionPropertyNames<T>>;
 interface ExtendedClient {
     config: IConfig;
+    emit<K extends keyof IBotEvents>(event: K, ...args: IBotEvents[K]): boolean;
     memory: number;
     version: string;
     userCount: number;
@@ -41,6 +42,11 @@ interface ExtendedClient {
     };
 }
 export interface IBotClient extends Overwrite<Client, ExtendedClient> {
+}
+interface IBotEvents extends Overwrite<ClientEvents, {
+    command: [CommandMetadata];
+    vote: [Object];
+}> {
 }
 export interface IBotMessage extends Overwrite<Message, {
     client: IBotClient;

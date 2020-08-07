@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.letters = exports.letter = exports.floats = exports.float = exports.choiceMany = exports.choice = exports.nums = exports.num = void 0;
 function num(min = 0, max = 10) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }

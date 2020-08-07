@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getMentionedChannels = void 0;
 function getMentionedChannels(message) {
     const channelRegex = /(?<=<#)(\d+?)(?=>)/g;
     const channelsInMessage = message.content.match(channelRegex) || [];

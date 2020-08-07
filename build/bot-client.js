@@ -1,4 +1,23 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -11,14 +30,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.BotClient = void 0;
 const util_1 = require("util");
 const discord_js_1 = require("discord.js");
 const collection_1 = __importDefault(require("@discordjs/collection"));
@@ -55,11 +68,11 @@ class BotClient extends discord_js_1.Client {
                 return [];
             if (channelsInMessage.length === 0)
                 return [];
-            const channelsInGuild = message.guild.channels.cache.filter(c => c.type === 'text');
+            const channelsInGuild = message.guild.channels.cache.filter((c) => c.type === 'text');
             const channels = channelsInMessage
                 .filter((v, i, a) => a.indexOf(v) === i)
-                .map(channelId => channelsInGuild.get(channelId))
-                .filter(c => c !== undefined);
+                .map((channelId) => channelsInGuild.get(channelId))
+                .filter((c) => c !== undefined);
             return channels;
         });
         this.clean = (text) => __awaiter(this, void 0, void 0, function* () {
@@ -123,7 +136,7 @@ class BotClient extends discord_js_1.Client {
         return process.memoryUsage().heapUsed / 1024 / 1024;
     }
     get userCount() {
-        return this.users.cache.filter(u => !u.bot).size;
+        return this.users.cache.filter((u) => !u.bot).size;
     }
     get serverCount() {
         return this.guilds.cache.size;
@@ -140,12 +153,12 @@ class BotClient extends discord_js_1.Client {
                     command.init(this);
                 }
                 this.commands.set(command.name, command);
-                (_a = command.aliases) === null || _a === void 0 ? void 0 : _a.forEach(alias => {
+                (_a = command.aliases) === null || _a === void 0 ? void 0 : _a.forEach((alias) => {
                     this.aliases.set(alias, command.name);
                 });
             }
             catch (e) {
-                this.emit('error', `Unable to load command ${command.name}: ${e}`);
+                this.emit('error', new Error(`Unable to load command ${command.name}: ${e}`));
             }
         });
     }
@@ -159,7 +172,7 @@ class BotClient extends discord_js_1.Client {
                 debug,
                 useTypescript,
             });
-            yield Promise.all([...cmdFiles.map(cmd => this.loadCommand(cmd))]);
+            yield Promise.all([...cmdFiles.map((cmd) => this.loadCommand(cmd))]);
         });
     }
     _loadEventsIntoClient() {
@@ -171,11 +184,17 @@ class BotClient extends discord_js_1.Client {
                 debug,
                 useTypescript,
             });
-            evtFiles.forEach(filePath => {
-                var _a;
+            evtFiles.forEach((filePath) => {
                 const splits = filePath.split(/(\/|\\)/g);
                 const eventName = splits[splits.length - 1].split('.')[0];
-                const event = (_a = module.require(filePath.replace(__dirname, './'))) === null || _a === void 0 ? void 0 : _a.default;
+                const requiredEventModule = module.require(filePath.replace(__dirname, './'));
+                let event;
+                if (requiredEventModule && typeof requiredEventModule === 'function') {
+                    event = requiredEventModule;
+                }
+                else if (requiredEventModule && typeof requiredEventModule.default === 'function') {
+                    event = requiredEventModule.default;
+                }
                 if (event) {
                     this.on(eventName, event.bind(null, this));
                 }

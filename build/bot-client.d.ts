@@ -12,6 +12,7 @@ export declare class BotClient extends Client implements IBotClient {
     cooldowns: IBotClient['cooldowns'];
     channelWatchers: IBotClient['channelWatchers'];
     extensions: ICommandExtenders;
+    emit: IBotClient['emit'];
     constructor(config: IConfig, options?: ClientOptions);
     wait: typeof setTimeout.__promisify__;
     randInt: (min: number, max: number) => number;
