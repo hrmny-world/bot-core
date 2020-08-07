@@ -9,6 +9,7 @@ import {
   MessageEmbed,
   MessageOptions,
   MessageAdditions,
+  ClientEvents,
 } from 'discord.js';
 import Collection from '@discordjs/collection';
 
@@ -24,6 +25,9 @@ export type NonFunction<T> = Omit<T, FunctionPropertyNames<T>>;
 interface ExtendedClient {
   // Base
   config: IConfig;
+
+  // Overwrites
+  emit<K extends keyof IBotEvents>(event: K, ...args: IBotEvents[K]): boolean;
 
   // Info
   memory: number;
@@ -66,6 +70,15 @@ interface ExtendedClient {
 }
 
 export interface IBotClient extends Overwrite<Client, ExtendedClient> {}
+
+interface IBotEvents
+  extends Overwrite<
+    ClientEvents,
+    {
+      command: [CommandMetadata];
+      vote: [Object];
+    }
+  > {}
 
 export interface IBotMessage
   extends Overwrite<

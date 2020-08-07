@@ -17,6 +17,8 @@ export class BotClient extends Client implements IBotClient {
   cooldowns: IBotClient['cooldowns'];
   channelWatchers: IBotClient['channelWatchers'];
   extensions: ICommandExtenders;
+  emit!: IBotClient['emit'];
+
   constructor(config: IConfig, options: ClientOptions = { disableMentions: 'everyone' }) {
     super(options);
 
