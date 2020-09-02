@@ -22,11 +22,23 @@ const readDir = util_1.default.promisify(fs_1.default.readdir);
 const exists = util_1.default.promisify(fs_1.default.exists);
 const mkdir = util_1.default.promisify(fs_1.default.mkdir);
 const stat = util_1.default.promisify(fs_1.default.stat);
-exports.readDirectory = function ({ dir, useTypescript = false, ignorePattern = '_*', root = app_root_path_1.default.toString(), }) {
+exports.readDirectory = function ({ dir, useTypescript = false, makeDir = true, debug = false, ignorePattern = '_*', root = app_root_path_1.default.toString(), }) {
     return __awaiter(this, void 0, void 0, function* () {
         const absolutePath = path_1.join(root, dir);
         const extensionRegex = useTypescript ? /\.(js|ts)$/ : /\.js$/;
         const ignoreExp = new minimatch_1.default.Minimatch(ignorePattern).makeRe();
+        try {
+            if (makeDir && !(yield exists(absolutePath))) {
+                yield mkdir(absolutePath);
+                return [];
+            }
+        }
+        catch (err) {
+            if (debug) {
+                console.log('Failed to create dir', { absolutePath, root, dir }, err);
+            }
+            return [];
+        }
         const dirContents = yield readDir(absolutePath);
         const removeTsExtensionFn = (filePath) => filePath.replace('.ts', '');
         const results = [];
@@ -69,7 +81,7 @@ exports.loadDirectory = function ({ dir, ImportClass, makeDir = true, useTypescr
             console.log('Failed to read directory', { dir, root }, err);
             return [];
         }
-        const requires = filePaths.map(filePath => {
+        const requires = filePaths.map((filePath) => {
             try {
                 return module.require(filePath.replace(__dirname, './'));
             }
@@ -99,7 +111,7 @@ exports.loadDirectory = function ({ dir, ImportClass, makeDir = true, useTypescr
             }
         });
         if (failedToLoad.length > 0 && debug) {
-            failedToLoad.forEach(failure => console.log('Failed to load file: ' + failure[0], failure[1]));
+            failedToLoad.forEach((failure) => console.log('Failed to load file: ' + failure[0], failure[1]));
         }
         return result;
     });

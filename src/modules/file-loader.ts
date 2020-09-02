@@ -25,6 +25,10 @@ export interface FileLoaderReadDirOptions {
    */
   ignorePattern?: string;
   /**
+   * If the folder cannot be found, should it be created?
+   */
+  makeDir?: boolean;
+  /**
    * Whether to console.log stuff.
    */
   debug?: boolean;
@@ -40,24 +44,36 @@ export interface FileLoaderLoadDirOptions<T> extends FileLoaderReadDirOptions {
    * The class that should be imported from the loaded files.
    */
   ImportClass: T;
-  /**
-   * If the folder cannot be found, should it be created?
-   */
-  makeDir?: boolean;
 }
 
 /**
  * Gets the path to all .js (or .ts) files in a given directory recursively.
  */
-export const readDirectory = async function({
+export const readDirectory = async function ({
   dir,
   useTypescript = false,
+  makeDir = true,
+  debug = false,
   ignorePattern = '_*',
   root = appRoot.toString(),
 }: FileLoaderReadDirOptions): Promise<string[]> {
   const absolutePath = join(root, dir);
   const extensionRegex = useTypescript ? /\.(js|ts)$/ : /\.js$/;
   const ignoreExp = new minimatch.Minimatch(ignorePattern).makeRe();
+
+  // dir doesn't exist, return empty array
+  try {
+    if (makeDir && !(await exists(absolutePath))) {
+      await mkdir(absolutePath);
+      return [];
+    }
+  } catch (err) {
+    if (debug) {
+      console.log('Failed to create dir', { absolutePath, root, dir }, err);
+    }
+    return [];
+  }
+
   const dirContents = await readDir(absolutePath);
   const removeTsExtensionFn = (filePath: string) => filePath.replace('.ts', '');
 
@@ -79,7 +95,7 @@ export const readDirectory = async function({
   return results.map(removeTsExtensionFn);
 };
 
-export const loadDirectory = async function<T>({
+export const loadDirectory = async function <T>({
   dir,
   ImportClass,
   makeDir = true,
@@ -112,7 +128,7 @@ export const loadDirectory = async function<T>({
     return [];
   }
 
-  const requires = filePaths.map(filePath => {
+  const requires = filePaths.map((filePath) => {
     try {
       return module.require(filePath.replace(__dirname, './'));
     } catch (err) {
@@ -146,7 +162,9 @@ export const loadDirectory = async function<T>({
     });
 
   if (failedToLoad.length > 0 && debug) {
-    failedToLoad.forEach(failure => console.log('Failed to load file: ' + failure[0], failure[1]));
+    failedToLoad.forEach((failure) =>
+      console.log('Failed to load file: ' + failure[0], failure[1]),
+    );
   }
   return result;
 };
