@@ -318,6 +318,7 @@ export interface CommandMetadata {
 
 export type IEventHandler = (bot: IBotClient) => void;
 
+// eslint-disable-next-line no-shadow
 export enum Permission {
   USER = 0,
   MANAGE_MESSAGES = 2,
