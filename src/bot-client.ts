@@ -170,6 +170,7 @@ export class BotClient extends Client implements IBotClient {
         command.init(this);
       }
       this.commands.set(command.name, command);
+      this.cooldowns.set(command.name.toLowerCase(), new Collection())
       command.aliases?.forEach((alias) => {
         this.aliases.set(alias, command.name);
       });

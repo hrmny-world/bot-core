@@ -153,6 +153,7 @@ class BotClient extends discord_js_1.Client {
                     command.init(this);
                 }
                 this.commands.set(command.name, command);
+                this.cooldowns.set(command.name.toLowerCase(), new collection_1.default());
                 (_a = command.aliases) === null || _a === void 0 ? void 0 : _a.forEach((alias) => {
                     this.aliases.set(alias, command.name);
                 });
