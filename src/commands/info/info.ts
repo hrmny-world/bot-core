@@ -1,6 +1,6 @@
 import { MessageEmbed } from 'discord.js';
-import moment from 'moment';
 import 'moment-duration-format';
+import moment from 'moment';
 
 import { Command } from '../../modules';
 import { Permission } from '../../interfaces';
@@ -29,7 +29,7 @@ export default new Command({
         url: bot.user?.avatarURL() ?? undefined,
       },
       author: {
-        name: 'Hrmny Stats 🍃',
+        name: (bot.config.name ?? 'Bot') + ' Stats 🍃',
       },
     };
 

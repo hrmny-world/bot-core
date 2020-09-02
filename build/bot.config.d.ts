@@ -13,6 +13,7 @@ export interface IGuildDefaultSettings {
 }
 export interface IConfig {
     root?: string;
+    name?: string;
     useTypescript: boolean;
     ownerID: Snowflake;
     admins: Snowflake[];
