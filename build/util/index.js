@@ -14,14 +14,18 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.time = exports.Emoji = exports.isObject = exports.formatString = void 0;
 var format_string_1 = require("./format-string");
-Object.defineProperty(exports, "formatString", { enumerable: true, get: function () { return format_string_1.default; } });
+Object.defineProperty(exports, "formatString", { enumerable: true, get: function () { return __importDefault(format_string_1).default; } });
 var is_object_1 = require("./is-object");
-Object.defineProperty(exports, "isObject", { enumerable: true, get: function () { return is_object_1.default; } });
+Object.defineProperty(exports, "isObject", { enumerable: true, get: function () { return __importDefault(is_object_1).default; } });
 exports.Emoji = __importStar(require("./emojis"));
 exports.time = __importStar(require("./time"));

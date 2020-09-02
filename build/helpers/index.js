@@ -14,11 +14,12 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
     __setModuleDefault(result, mod);
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.UserHelpers = exports.TextHelpers = exports.RandomHelpers = exports.ChannelHelpers = void 0;
 exports.ChannelHelpers = __importStar(require("./channel-helpers"));
 exports.RandomHelpers = __importStar(require("./random-helpers"));
 exports.TextHelpers = __importStar(require("./text-helpers"));
