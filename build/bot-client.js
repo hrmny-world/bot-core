@@ -120,6 +120,8 @@ class BotClient extends discord_js_1.Client {
         this.commands = new collection_1.default();
         this.aliases = new collection_1.default();
         this.cooldowns = new modules_1.CooldownManager(this);
+        this.botListeners = new collection_1.default();
+        this._listenerRunner = undefined;
         this.channelWatchers = new collection_1.default();
         const permLevelCache = {};
         for (let i = 0; i < this.config.permLevels.length; i++) {
@@ -176,6 +178,30 @@ class BotClient extends discord_js_1.Client {
             yield Promise.all([...cmdFiles.map((cmd) => this.loadCommand(cmd))]);
         });
     }
+    _loadListenersIntoClient() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { root, debug, useTypescript } = this.config;
+            const listenerFiles = yield modules_1.FileLoader.loadDirectory({
+                ImportClass: modules_1.Listener,
+                dir: 'listeners',
+                root,
+                debug,
+                useTypescript,
+            });
+            const makeName = (words) => {
+                return Array.isArray(words) ? words.join(' ').toLowerCase() : words.toLowerCase();
+            };
+            const mappedListeners = listenerFiles.map((l) => {
+                return [
+                    makeName(l.words),
+                    Object.assign(l, { name: makeName(l.words) }),
+                ];
+            });
+            const listeners = new collection_1.default(mappedListeners);
+            listeners.ignored = new modules_1.ListenerIgnoreList(this);
+            this.botListeners = listeners;
+        });
+    }
     _loadEventsIntoClient() {
         return __awaiter(this, void 0, void 0, function* () {
             const { root, debug, useTypescript } = this.config;
@@ -211,6 +237,9 @@ class BotClient extends discord_js_1.Client {
             yield this._loadEventsIntoClient();
             this.cooldowns.loadCommands(this.commands);
             this.on('message', message_1.commandRunner(this.extensions, this));
+            yield this._loadListenersIntoClient();
+            this._listenerRunner = new modules_1.ListenerRunner(this, {});
+            this._listenerRunner.listen();
             for (const [eventName, eventHandler] of Object.entries(events)) {
                 this.on(eventName, eventHandler.bind(null, this));
             }

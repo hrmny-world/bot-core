@@ -31,3 +31,4 @@ Object.defineProperty(exports, "splitArguments", { enumerable: true, get: functi
 Object.defineProperty(exports, "validatePrefix", { enumerable: true, get: function () { return command_1.validatePrefix; } });
 exports.FileLoader = __importStar(require("./file-loader"));
 __exportStar(require("./channel-watcher"), exports);
+__exportStar(require("./listener"), exports);

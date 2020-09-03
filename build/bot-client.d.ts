@@ -7,6 +7,8 @@ import { IPrefixChecker, ICommandExtenders, IMetaExtender } from './events/messa
 export declare class BotClient extends Client implements IBotClient {
     config: IBotClient['config'];
     commands: IBotClient['commands'];
+    botListeners: IBotClient['botListeners'];
+    _listenerRunner: IBotClient['_listenerRunner'];
     aliases: IBotClient['aliases'];
     permLevelCache: IBotClient['permLevelCache'];
     cooldowns: IBotClient['cooldowns'];
@@ -36,6 +38,7 @@ export declare class BotClient extends Client implements IBotClient {
     get version(): string;
     loadCommand(command: Command): Promise<void>;
     private _loadCommandsIntoClient;
+    private _loadListenersIntoClient;
     private _loadEventsIntoClient;
     extend: {
         prefixChecking: (checker: IPrefixChecker) => void;

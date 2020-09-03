@@ -3,6 +3,7 @@ import Collection from '@discordjs/collection';
 import { IConfig } from './bot.config';
 import { Command, CooldownManager, ChannelWatcher } from './modules';
 import { BotClient } from './bot-client';
+import { ListenerIgnoreList, Listener, ListenerRunner } from './modules/listener';
 export declare type Overwrite<T, U> = Pick<T, Exclude<keyof T, keyof U>> & U;
 export declare type OmitPropertiesOfType<T, U> = {
     [K in keyof T]: T[K] extends U ? K : never;
@@ -20,6 +21,10 @@ interface ExtendedClient {
     aliases: Collection<string, string>;
     cooldowns: CooldownManager;
     channelWatchers: Collection<string, ChannelWatcher>;
+    botListeners: Overwrite<Collection<string, Listener>, {
+        ignored: ListenerIgnoreList;
+    }>;
+    _listenerRunner: ListenerRunner;
     permlevel(message: IBotMessage): number;
     clean(text: string): Promise<string>;
     wait(time: number): Promise<void>;
@@ -56,6 +61,16 @@ export interface IBotMessage extends Overwrite<Message, {
 export declare type CombinedMeta<T> = CommandMetadata & T;
 declare type ISendFnLastArg = string | MessageOptions | MessageAdditions;
 declare type ISendFnReturn = Promise<void | IBotMessage>;
+export interface IListenerOptions<T> {
+    words: string | string[];
+    cooldown: number;
+    category?: string;
+    priority?: number;
+    globalCooldown?: number;
+    run(bot: IBotClient, message: IBotMessage, meta: CombinedMeta<T>): any;
+    init?(bot: BotClient): any;
+    _cooldowns: Map<string, number>;
+}
 export interface ICommandOptions<T> {
     name: string;
     description: string;
