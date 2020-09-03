@@ -163,7 +163,7 @@ class ListenerRunner {
             this.mappedListeners[c].sort((a, b) => a.priority - b.priority);
         });
     }
-    listen() {
+    listen(extensions) {
         this.bot.on('message', (message) => {
             const bot = this.bot;
             const channel = () => message.channel;
@@ -203,7 +203,23 @@ class ListenerRunner {
                     listener.send = (...args) => safeSend(...args);
                     let result;
                     try {
-                        const evaluation = listener.evaluate(message, command_1.buildCommandMetadata(bot, message, ''));
+                        const meta = command_1.buildCommandMetadata(bot, message, '');
+                        if (extensions.metaExtenders.length) {
+                            for (const extension of extensions.metaExtenders) {
+                                try {
+                                    const extended = extension(meta);
+                                    if (extended instanceof Promise) {
+                                        yield extended;
+                                    }
+                                }
+                                catch (err) {
+                                    err.message = 'A meta extension function threw an error.\n\n' + err.message;
+                                    bot.emit('error', err);
+                                    return;
+                                }
+                            }
+                        }
+                        const evaluation = listener.evaluate(message, meta);
                         result = evaluation instanceof Promise ? yield evaluation : evaluation;
                     }
                     catch (e) {

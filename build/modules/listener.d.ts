@@ -3,6 +3,7 @@ import { IBotMessage, IListenerOptions, CombinedMeta } from '../interfaces';
 import { BotClient } from '../bot-client';
 import Collection from '@discordjs/collection';
 import { Snowflake } from 'discord.js';
+import { ICommandExtenders } from '../events/message';
 export declare const COMMON_EXPRESSIONS: {
     me: string;
     action: string;
@@ -55,6 +56,6 @@ export declare class ListenerRunner {
     constructor(bot: BotClient, options: {
         [key: string]: any;
     });
-    listen(): void;
+    listen(extensions: ICommandExtenders): void;
 }
 export {};

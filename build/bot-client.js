@@ -239,7 +239,7 @@ class BotClient extends discord_js_1.Client {
             this.on('message', message_1.commandRunner(this.extensions, this));
             yield this._loadListenersIntoClient();
             this._listenerRunner = new modules_1.ListenerRunner(this, {});
-            this._listenerRunner.listen();
+            this._listenerRunner.listen(this.extensions);
             for (const [eventName, eventHandler] of Object.entries(events)) {
                 this.on(eventName, eventHandler.bind(null, this));
             }
