@@ -4,6 +4,7 @@ import Collection from '@discordjs/collection';
 import { Snowflake } from 'discord.js';
 import { isObject } from '../util';
 import { buildCommandMetadata } from './command';
+import { ICommandExtenders } from '../events/message';
 
 export const COMMON_EXPRESSIONS = {
   // TODO: find a way to add "me" in here
@@ -237,7 +238,7 @@ export class ListenerRunner {
    * Makes the bot start listening for trigger messages.
    * @memberof ListenerRunner
    */
-  listen() {
+  listen(extensions: ICommandExtenders) {
     this.bot.on('message', (message) => {
       const bot = this.bot;
       const channel = () => message.channel;
@@ -282,10 +283,23 @@ export class ListenerRunner {
           listener.send = (...args: any) => safeSend(...args);
           let result;
           try {
-            const evaluation = listener.evaluate(
-              (message as unknown) as IBotMessage,
-              buildCommandMetadata(bot, (message as unknown) as IBotMessage, ''),
-            );
+            const meta = buildCommandMetadata(bot, (message as unknown) as IBotMessage, '');
+            if (extensions.metaExtenders.length) {
+              for (const extension of extensions.metaExtenders) {
+                try {
+                  const extended = extension(meta);
+                  if (extended instanceof Promise) {
+                    // await in for..of loop because this must be sequential
+                    await extended;
+                  }
+                } catch (err) {
+                  err.message = 'A meta extension function threw an error.\n\n' + err.message;
+                  bot.emit('error', err);
+                  return;
+                }
+              }
+            }
+            const evaluation = listener.evaluate((message as unknown) as IBotMessage, meta);
             // eslint-disable-next-line no-await-in-loop
             result = evaluation instanceof Promise ? await evaluation : evaluation;
           } catch (e) {

@@ -291,7 +291,7 @@ export class BotClient extends Client implements IBotClient {
 
     await this._loadListenersIntoClient();
     this._listenerRunner = new ListenerRunner(this, {});
-    this._listenerRunner.listen();
+    this._listenerRunner.listen(this.extensions);
 
     // Channel Watcher events
     for (const [eventName, eventHandler] of Object.entries(events)) {
