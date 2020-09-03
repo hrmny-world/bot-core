@@ -16,6 +16,7 @@ import Collection from '@discordjs/collection';
 import { IConfig } from './bot.config';
 import { Command, CooldownManager, ChannelWatcher } from './modules';
 import { BotClient } from './bot-client';
+import { ListenerIgnoreList, Listener, ListenerRunner } from './modules/listener';
 
 export type Overwrite<T, U> = Pick<T, Exclude<keyof T, keyof U>> & U;
 export type OmitPropertiesOfType<T, U> = { [K in keyof T]: T[K] extends U ? K : never }[keyof T];
@@ -40,6 +41,13 @@ interface ExtendedClient {
   aliases: Collection<string, string>;
   cooldowns: CooldownManager;
   channelWatchers: Collection<string, ChannelWatcher>;
+  botListeners: Overwrite<
+    Collection<string, Listener>,
+    {
+      ignored: ListenerIgnoreList;
+    }
+  >;
+  _listenerRunner: ListenerRunner;
 
   // Utility methods
   permlevel(message: IBotMessage): number;
@@ -96,6 +104,39 @@ export type CombinedMeta<T> = CommandMetadata & T;
 
 type ISendFnLastArg = string | MessageOptions | MessageAdditions;
 type ISendFnReturn = Promise<void | IBotMessage>;
+
+export interface IListenerOptions<T> {
+  /**
+   * Words to watch for. (regex syntax)
+   */
+  words: string | string[];
+  /**
+   * Listener will not trigger for a user based on this cooldown.
+   */
+  cooldown: number;
+  /**
+   * The category this listener belongs to.
+   */
+  category?: string;
+  /**
+   * Lower priority means the listener runs earlier.
+   */
+  priority?: number;
+  /**
+   * Cooldown that applies to all users.
+   */
+  globalCooldown?: number;
+  /**
+   * The method that will be run when the listener is triggered.
+   */
+  run(bot: IBotClient, message: IBotMessage, meta: CombinedMeta<T>): any;
+  /**
+   * This function is called when the listener is loaded
+   */
+  init?(bot: BotClient): any;
+
+  _cooldowns: Map<string, number>;
+}
 
 export interface ICommandOptions<T> {
   /**

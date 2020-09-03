@@ -4,7 +4,15 @@ import Collection from '@discordjs/collection';
 
 import { IBotClient, IEventHandler, IBotMessage } from './interfaces';
 import { IConfig } from './bot.config';
-import { FileLoader, Command, CooldownManager, ChannelWatcher } from './modules';
+import {
+  FileLoader,
+  Command,
+  CooldownManager,
+  ChannelWatcher,
+  Listener,
+  ListenerIgnoreList,
+  ListenerRunner,
+} from './modules';
 import { IPrefixChecker, ICommandExtenders, IMetaExtender, commandRunner } from './events/message';
 import * as events from './events';
 // import { webServer } from './web';
@@ -12,6 +20,8 @@ import * as events from './events';
 export class BotClient extends Client implements IBotClient {
   config: IBotClient['config'];
   commands: IBotClient['commands'];
+  botListeners: IBotClient['botListeners'];
+  _listenerRunner: IBotClient['_listenerRunner'];
   aliases: IBotClient['aliases'];
   permLevelCache: IBotClient['permLevelCache'];
   cooldowns: IBotClient['cooldowns'];
@@ -29,6 +39,8 @@ export class BotClient extends Client implements IBotClient {
     this.commands = new Collection();
     this.aliases = new Collection();
     this.cooldowns = new CooldownManager(this);
+    this.botListeners = (new Collection() as unknown as IBotClient['botListeners']);
+    this._listenerRunner = (undefined as unknown as IBotClient['_listenerRunner']);
     this.channelWatchers = new Collection<string, ChannelWatcher>();
 
     const permLevelCache: { [key: string]: number } = {};
@@ -170,7 +182,7 @@ export class BotClient extends Client implements IBotClient {
         command.init(this);
       }
       this.commands.set(command.name, command);
-      this.cooldowns.set(command.name.toLowerCase(), new Collection())
+      this.cooldowns.set(command.name.toLowerCase(), new Collection());
       command.aliases?.forEach((alias) => {
         this.aliases.set(alias, command.name);
       });
@@ -191,6 +203,33 @@ export class BotClient extends Client implements IBotClient {
 
     // Promise.all for performance
     await Promise.all([...cmdFiles.map((cmd) => this.loadCommand(cmd as any))]);
+  }
+
+  private async _loadListenersIntoClient() {
+    const { root, debug, useTypescript } = this.config;
+    const listenerFiles = await FileLoader.loadDirectory({
+      ImportClass: Listener,
+      dir: 'listeners',
+      root,
+      debug,
+      useTypescript,
+    });
+
+    const makeName = (words: string | string[]): string => {
+      return Array.isArray(words) ? words.join(' ').toLowerCase() : words.toLowerCase();
+    };
+
+    const mappedListeners = listenerFiles.map((l: typeof Listener) => {
+      return [
+        makeName(((l as unknown) as Listener).words),
+        Object.assign(l, { name: makeName(((l as unknown) as Listener).words) }),
+      ];
+    });
+
+    const listeners: any = new Collection<string, Listener>(mappedListeners as any);
+    listeners.ignored = new ListenerIgnoreList(this);
+
+    this.botListeners = listeners;
   }
 
   private async _loadEventsIntoClient() {
@@ -250,6 +289,10 @@ export class BotClient extends Client implements IBotClient {
       ) => void,
     );
 
+    await this._loadListenersIntoClient();
+    this._listenerRunner = new ListenerRunner(this, {});
+    this._listenerRunner.listen();
+
     // Channel Watcher events
     for (const [eventName, eventHandler] of Object.entries(events)) {
       this.on(eventName as keyof ClientEvents, (eventHandler as IEventHandler).bind(null, this));
@@ -259,6 +302,3 @@ export class BotClient extends Client implements IBotClient {
     return super.login(token);
   }
 }
-
-// Express server to keep the heroku app awake
-// const server = webServer(bot);
