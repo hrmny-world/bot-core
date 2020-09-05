@@ -80,7 +80,7 @@ exports.default = new modules_1.Command({
         const cats = Object.keys(commandList);
         cats.sort((a, b) => a.localeCompare(b));
         cats.forEach(category => {
-            embed.addField(`${[][category] || ':page_facing_up:'} ${category}`, '>' +
+            embed.addField(`${(bot.config.helpCategoryEmotes || {})[category] || ':page_facing_up:'} ${category}`, '>' +
                 commandList[category]
                     .filter((c) => !c.hidden)
                     .sort((a, b) => a < b)

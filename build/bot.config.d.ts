@@ -34,4 +34,7 @@ export interface IConfig {
     messages: {
         [key: string]: string;
     };
+    helpCategoryEmotes: {
+        [key: string]: string;
+    };
 }
