@@ -97,7 +97,7 @@ export default new Command({
     cats.sort((a, b) => a.localeCompare(b));
     cats.forEach(category => {
       embed.addField(
-        `${/*CATEGORY_EMOJIS*/ ([] as any)[category] || ':page_facing_up:'} ${category}`,
+        `${(bot.config.helpCategoryEmotes || {} as any)[category] || ':page_facing_up:'} ${category}`,
         '>' +
           (commandList as any)[category]
             .filter((c: Command) => !c.hidden)
