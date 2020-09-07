@@ -81,8 +81,8 @@ export class Listener<T = { [key: string]: any }> implements IListenerOptions<T>
     // if no records for this user or if off cooldown
     if (!this._cooldowns.get(author.id) || Date.now() - this._cooldowns.get(author.id)! > 0) {
       if (stringMatch(message, this.words)) {
-        // if (this.client.listeners.ignored.guilds.has(message.guild.id)) return;
-        // if (this.client.listeners.ignored.channels.has(message.channel.id)) return;
+        if (message.client.botListeners.ignored.guilds.has(message.guild?.id as any)) return;
+        if (message.client.botListeners.ignored.channels.has(message.channel.id)) return;
         const result = this.run(message.client, message, meta);
         // set cooldown
         this._cooldowns.set(author.id, Date.now() + this.cooldown * 1000);
