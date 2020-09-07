@@ -28,6 +28,9 @@ exports.commandRunner = (extensions, bot) => (message) => __awaiter(void 0, void
         for (const check of extensions.prefixCheckers) {
             try {
                 prefix = check(bot, message);
+                if (prefix instanceof Promise) {
+                    prefix = yield prefix;
+                }
             }
             catch (err) {
                 err.message = 'A prefix check function threw an error.\n\n' + err.message;
