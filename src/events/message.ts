@@ -32,6 +32,10 @@ export const commandRunner = (extensions: ICommandExtenders, bot: BotClient) => 
     for (const check of extensions.prefixCheckers) {
       try {
         prefix = check(bot, message);
+        if ((prefix as any) instanceof Promise) {
+          // await in for..of loop because this must be sequential
+          prefix = await prefix;
+        }
       } catch (err) {
         err.message = 'A prefix check function threw an error.\n\n' + err.message;
         bot.emit('error', err);
