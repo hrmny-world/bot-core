@@ -1,6 +1,6 @@
 {
   "name": "@ponatech/bot",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "A Discord.JS Bot Framework Written in Typescript.",
   "main": "./build/index.js",
   "scripts": {
