@@ -62,6 +62,7 @@ class Listener {
         this.run = run;
     }
     evaluate(message, meta) {
+        var _a;
         const { author } = message;
         if (author.bot)
             return false;
@@ -69,6 +70,10 @@ class Listener {
             return false;
         if (!this._cooldowns.get(author.id) || Date.now() - this._cooldowns.get(author.id) > 0) {
             if (exports.stringMatch(message, this.words)) {
+                if (message.client.botListeners.ignored.guilds.has((_a = message.guild) === null || _a === void 0 ? void 0 : _a.id))
+                    return;
+                if (message.client.botListeners.ignored.channels.has(message.channel.id))
+                    return;
                 const result = this.run(message.client, message, meta);
                 this._cooldowns.set(author.id, Date.now() + this.cooldown * 1000);
                 if (this.globalCooldown) {
