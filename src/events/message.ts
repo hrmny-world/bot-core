@@ -85,6 +85,7 @@ export const commandRunner = (extensions: ICommandExtenders, bot: BotClient) => 
       await message.channel.send(
         'This command is unavailable via private message. Please run this command in a server.',
       );
+      return;
     } catch {
       /* This is fine. */
     }
@@ -99,6 +100,7 @@ export const commandRunner = (extensions: ICommandExtenders, bot: BotClient) => 
       await message.channel.send(
         'This command is only available via private message. Please run this command in a DM.',
       );
+      return;
     } catch {
       /* This is fine. */
     }
