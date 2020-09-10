@@ -70,6 +70,7 @@ exports.commandRunner = (extensions, bot) => (message) => __awaiter(void 0, void
     if (meta.isDM && !((_b = meta.command.runIn) === null || _b === void 0 ? void 0 : _b.includes('dm'))) {
         try {
             yield message.channel.send('This command is unavailable via private message. Please run this command in a server.');
+            return;
         }
         catch (_g) {
         }
@@ -78,6 +79,7 @@ exports.commandRunner = (extensions, bot) => (message) => __awaiter(void 0, void
         !(((_c = meta.command.runIn) === null || _c === void 0 ? void 0 : _c.includes('text')) || ((_d = meta.command.runIn) === null || _d === void 0 ? void 0 : _d.includes('guild')))) {
         try {
             yield message.channel.send('This command is only available via private message. Please run this command in a DM.');
+            return;
         }
         catch (_h) {
         }
