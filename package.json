@@ -18,7 +18,7 @@
     "tools",
     "commands"
   ],
-  "author": "Joaquim Neto <joaquimmy@yahoo.com>",
+  "author": "Joaquim Neto <joaquimmy@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "@discordjs/collection": "^0.1.6",
