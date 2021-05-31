@@ -1,9 +1,11 @@
 import { promisify, inspect } from 'util';
-import { Client, GuildChannel, ClientOptions, ClientEvents } from 'discord.js';
+import { Client, GuildChannel, ClientOptions, ClientEvents, Message } from 'discord.js';
 import Collection from '@discordjs/collection';
+import merge from 'lodash.merge';
+import os from 'os';
 
 import { IBotClient, IEventHandler, IBotMessage } from './interfaces';
-import { IConfig } from './bot.config';
+import { defaultConfig, IConfig } from './bot.config';
 import {
   FileLoader,
   Command,
@@ -12,6 +14,8 @@ import {
   Listener,
   ListenerIgnoreList,
   ListenerRunner,
+  Task,
+  Schedule,
 } from './modules';
 import { IPrefixChecker, ICommandExtenders, IMetaExtender, commandRunner } from './events/message';
 import * as events from './events';
@@ -28,23 +32,25 @@ export class BotClient extends Client implements IBotClient {
   channelWatchers: IBotClient['channelWatchers'];
   extensions: ICommandExtenders;
   emit!: IBotClient['emit'];
+  schedule: IBotClient['schedule'];
 
   constructor(config: IConfig, options: ClientOptions = { disableMentions: 'everyone' }) {
     super(options);
 
     // Config
-    this.config = config;
+    this.config = merge(defaultConfig, config);
 
     // Command stuff
     this.commands = new Collection();
     this.aliases = new Collection();
     this.cooldowns = new CooldownManager(this);
-    this.botListeners = (new Collection() as unknown as IBotClient['botListeners']);
-    this._listenerRunner = (undefined as unknown as IBotClient['_listenerRunner']);
+    this.botListeners = new Collection() as unknown as IBotClient['botListeners'];
+    this._listenerRunner = undefined as unknown as IBotClient['_listenerRunner'];
     this.channelWatchers = new Collection<string, ChannelWatcher>();
+    this.schedule = new Schedule(this, []);
 
     const permLevelCache: { [key: string]: number } = {};
-    for (let i = 0; i < this.config.permLevels.length; i++) {
+    for (let i = 0; i < this.config.permLevels?.length; i++) {
       const thisLevel = this.config.permLevels[i];
       permLevelCache[thisLevel.name as string] = thisLevel.level;
     }
@@ -158,7 +164,16 @@ export class BotClient extends Client implements IBotClient {
   // Getters
 
   get memory() {
-    return process.memoryUsage().heapUsed / 1024 / 1024;
+    const bot = Math.trunc(process.memoryUsage().heapUsed);
+    const free = os.freemem();
+    const total = os.totalmem();
+
+    return {
+      bot,
+      free,
+      total,
+      percent: (total - free) / total,
+    };
   }
 
   get userCount() {
@@ -221,8 +236,8 @@ export class BotClient extends Client implements IBotClient {
 
     const mappedListeners = listenerFiles.map((l: typeof Listener) => {
       return [
-        makeName(((l as unknown) as Listener).words),
-        Object.assign(l, { name: makeName(((l as unknown) as Listener).words) }),
+        makeName((l as unknown as Listener).words),
+        Object.assign(l, { name: makeName((l as unknown as Listener).words) }),
       ];
     });
 
@@ -261,6 +276,19 @@ export class BotClient extends Client implements IBotClient {
     });
   }
 
+  private async _loadTasksIntoClient() {
+    const { root, debug, useTypescript } = this.config;
+    const taskFiles = await FileLoader.loadDirectory({
+      ImportClass: Task,
+      dir: 'tasks',
+      root,
+      debug,
+      useTypescript,
+    });
+
+    this.schedule = new Schedule(this, taskFiles as unknown as Task[]);
+  }
+
   extend = {
     prefixChecking: (checker: IPrefixChecker) => {
       this.extensions.prefixCheckers.push(checker);
@@ -278,16 +306,19 @@ export class BotClient extends Client implements IBotClient {
     // Then we load events, which will include our message and ready event.
     await this._loadEventsIntoClient();
 
+    // Loads and starts tasks
+    await this._loadTasksIntoClient();
+
     // Pass the command collection into the cooldowns manager.
     this.cooldowns.loadCommands(this.commands);
 
+    const runner = commandRunner(this.extensions, this) as unknown as (
+      ...args: ClientEvents['message']
+    ) => void;
+
     // Listen to commands
-    this.on(
-      'message',
-      (commandRunner(this.extensions, this) as unknown) as (
-        ...args: ClientEvents['message']
-      ) => void,
-    );
+    this.on('message', runner);
+    this.on('messageUpdate', (_, message) => runner(message as Message));
 
     await this._loadListenersIntoClient();
     this._listenerRunner = new ListenerRunner(this, {});

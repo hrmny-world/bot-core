@@ -17,6 +17,8 @@ import { IConfig } from './bot.config';
 import { Command, CooldownManager, ChannelWatcher } from './modules';
 import { BotClient } from './bot-client';
 import { ListenerIgnoreList, Listener, ListenerRunner } from './modules/listener';
+import { Job } from 'node-schedule';
+import { Schedule } from './modules/tasks';
 
 export type Overwrite<T, U> = Pick<T, Exclude<keyof T, keyof U>> & U;
 export type OmitPropertiesOfType<T, U> = { [K in keyof T]: T[K] extends U ? K : never }[keyof T];
@@ -31,7 +33,11 @@ interface ExtendedClient {
   emit<K extends keyof IBotEvents>(event: K, ...args: IBotEvents[K]): boolean;
 
   // Info
-  memory: number;
+  memory: {
+    bot: number;
+    free: number;
+    total: number;
+  };
   version: string;
   userCount: number;
   serverCount: number;
@@ -48,6 +54,7 @@ interface ExtendedClient {
     }
   >;
   _listenerRunner: ListenerRunner;
+  schedule: Schedule;
 
   // Utility methods
   permlevel(message: IBotMessage): number;
@@ -357,7 +364,10 @@ export interface CommandMetadata {
   time: Date;
 }
 
-export type IEventHandler = (bot: IBotClient) => void;
+export type IEventHandler = ((bot: IBotClient) => void) | ((bot: IBotClient) => Promise<void>);
+export type ITaskHandler =
+  | ((bot: IBotClient, fireDate: Date) => void)
+  | ((bot: IBotClient, fireDate: Date) => Promise<void>);
 
 // eslint-disable-next-line no-shadow
 export enum Permission {
@@ -369,4 +379,11 @@ export enum Permission {
   BOT_SUPPORT = 8,
   BOT_ADMIN = 9,
   BOT_OWNER = 10,
+}
+
+export interface ITask {
+  name: string;
+  time: string | Date;
+  run: ITaskHandler;
+  job: Job;
 }
