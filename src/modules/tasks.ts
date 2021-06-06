@@ -1,6 +1,7 @@
-import { IBotClient, ITask } from '../interfaces';
-
 import nodeSchedule from 'node-schedule';
+
+import { IBotClient, ITask } from '../interfaces';
+import { SensumSchemaError } from '../errors';
 
 export class Task {
   name: ITask['name'];
@@ -9,9 +10,10 @@ export class Task {
   job?: ITask['job'];
 
   constructor({ name, time, run }: ITask) {
-    if (!name) throw new Error('Missing task name.');
-    if (!time) throw new Error('You must set a task time.');
-    if (!run || typeof run !== 'function') throw new Error('You must set a run function.');
+    if (!name) throw new SensumSchemaError('Missing task name.');
+    if (!time) throw new SensumSchemaError('You must set a task time.');
+    if (!run || typeof run !== 'function')
+      throw new SensumSchemaError('You must set a run function.');
 
     this.name = name;
     // Cron or Date

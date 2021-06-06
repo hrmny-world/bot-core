@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { IBotMessage, IListenerOptions, CombinedMeta } from '../interfaces';
 import { BotClient } from '../bot-client';
 import Collection from '@discordjs/collection';
@@ -5,6 +6,7 @@ import { Snowflake } from 'discord.js';
 import { isObject } from '../util';
 import { buildCommandMetadata } from './command';
 import { ICommandExtenders } from '../events/message';
+import { SensumSchemaError } from '../errors';
 
 export const COMMON_EXPRESSIONS = {
   // TODO: find a way to add "me" in here
@@ -62,7 +64,7 @@ export class Listener<T = { [key: string]: any }> implements IListenerOptions<T>
 
   constructor({ words, cooldown, category, globalCooldown, priority, run }: IListenerOptions<T>) {
     if (!words || (!cooldown && cooldown !== 0) || !run) {
-      throw new Error('A listener requires words, cooldown and a run function.');
+      throw new SensumSchemaError('A listener requires words, cooldown and a run function.');
     }
     this.words = words;
     this.category = category;
@@ -95,9 +97,12 @@ export class Listener<T = { [key: string]: any }> implements IListenerOptions<T>
     return false;
   }
 
+  makeName(): string {
+    return Array.isArray(this.words) ? this.words.join(' ') : this.words;
+  }
+
   toString() {
-    const words = Array.isArray(this.words) ? this.words.join(' ') : this.words;
-    return `Listener [${words} / ${this.category}]`;
+    return `Listener [${this.makeName()} / ${this.category}]`;
   }
 
   [Symbol.toStringTag] = 'Listener';
@@ -283,7 +288,7 @@ export class ListenerRunner {
           listener.send = (...args: any) => safeSend(...args);
           let result;
           try {
-            const meta = buildCommandMetadata(bot, (message as unknown) as IBotMessage, '');
+            const meta = buildCommandMetadata(bot, message as unknown as IBotMessage, '');
             if (extensions.metaExtenders.length) {
               for (const extension of extensions.metaExtenders) {
                 try {
@@ -299,7 +304,7 @@ export class ListenerRunner {
                 }
               }
             }
-            const evaluation = listener.evaluate((message as unknown) as IBotMessage, meta);
+            const evaluation = listener.evaluate(message as unknown as IBotMessage, meta);
             // eslint-disable-next-line no-await-in-loop
             result = evaluation instanceof Promise ? await evaluation : evaluation;
           } catch (e) {

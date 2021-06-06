@@ -65,7 +65,7 @@ interface ExtendedClient {
   getChannelsInMessage(message: IBotMessage): Promise<GuildChannel[]>;
   lines(...lines: string[]): string;
   appendMsg(msg: IBotMessage, content: string, delay?: number): Promise<IBotMessage>;
-  loadCommand(command: Command): Promise<void>;
+  loadCommand(command: Command): void;
   // unloadCommand(commandName: string): Promise<void>;
 
   // Helper functions will also go into .helpers for semanticness.
@@ -90,7 +90,7 @@ interface IBotEvents
   extends Overwrite<
     ClientEvents,
     {
-      command: [CommandMetadata];
+      command: [ICommandMetadata];
       vote: [Object];
     }
   > {}
@@ -107,7 +107,7 @@ export interface IBotMessage
     }
   > {}
 
-export type CombinedMeta<T> = CommandMetadata & T;
+export type CombinedMeta<T> = ICommandMetadata & T;
 
 type ISendFnLastArg = string | MessageOptions | MessageAdditions;
 type ISendFnReturn = Promise<void | IBotMessage>;
@@ -290,7 +290,7 @@ export interface ICommandOptions<T> {
   // send?(...args: any): sendFnReturn;
 }
 
-export interface CommandMetadata {
+export interface ICommandMetadata {
   /**
    * The id of the user that called the command.
    */

@@ -16,7 +16,7 @@ import StrictEventEmitter from 'strict-event-emitter-types';
 import { NonFunction, IBotMessage } from '../interfaces';
 import { BotClient } from '../bot-client';
 
-export interface ChannelWatcherEvents {
+export interface IChannelWatcherEvents {
   deleted: { channel: Channel };
   pins: { oldPins: Collection<string, IBotMessage>; newPins: Collection<string, IBotMessage> };
   update: ChannelDiff;
@@ -45,7 +45,7 @@ type WatchedChannel = DMChannel & GuildChannel;
 
 export type ChannelDiff = Partial<NonFunction<WatchedChannel>>;
 
-type ChannelWatcherEmitter = StrictEventEmitter<EventEmitter, ChannelWatcherEvents>;
+type ChannelWatcherEmitter = StrictEventEmitter<EventEmitter, IChannelWatcherEvents>;
 
 export class ChannelWatcher extends (EventEmitter as { new (): ChannelWatcherEmitter }) {
   bot: BotClient;

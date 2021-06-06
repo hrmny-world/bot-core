@@ -2,11 +2,12 @@ import {
   ICommandOptions,
   Permission,
   IBotMessage,
-  CommandMetadata,
+  ICommandMetadata,
   IBotClient,
 } from '../interfaces';
 import Collection from '@discordjs/collection';
 import { Snowflake } from 'discord.js';
+import { SensumSchemaError } from '../errors';
 
 /**
  * Represents a command.
@@ -21,7 +22,7 @@ import { Snowflake } from 'discord.js';
  *   },
  * });
  */
-export class Command<T = {[key: string]: any}> implements ICommandOptions<T> {
+export class Command<T = { [key: string]: any }> implements ICommandOptions<T> {
   name: ICommandOptions<T>['name'] = '';
   description: ICommandOptions<T>['description'] = '';
   usage: ICommandOptions<T>['usage'] = '';
@@ -46,13 +47,13 @@ export class Command<T = {[key: string]: any}> implements ICommandOptions<T> {
    */
   constructor(options: ICommandOptions<T>) {
     if (!('name' in options)) {
-      throw new TypeError('A command must have a name.');
+      throw new SensumSchemaError('A command must have a name.');
     }
     if (!('description' in options)) {
-      throw new TypeError('A command must have a description.');
+      throw new SensumSchemaError('A command must have a description.');
     }
     if (!('run' in options)) {
-      throw new TypeError('A command must have a handler function.');
+      throw new SensumSchemaError('A command must have a handler function.');
     }
     Object.assign(this, options);
   }
@@ -75,10 +76,7 @@ export const splitArguments = (
     // collapse spaces
     .replace(/(\s\s+|\n)/g, ' ')
     .split(/ +/);
-  const command = args
-    .shift()
-    ?.trim()
-    .toLowerCase();
+  const command = args.shift()?.trim().toLowerCase();
   return {
     command,
     args,
@@ -99,10 +97,7 @@ export const validatePrefix = (
   defaultPrefix: string,
   guildPrefixes?: Map<string, any>,
 ): string | false => {
-  const content = message.content
-    .trim()
-    .toLowerCase()
-    .replace(/\s\s+/g, ' ');
+  const content = message.content.trim().toLowerCase().replace(/\s\s+/g, ' ');
 
   // return truthy if no guildPrefixes map provided and command starts with prefix
   if (!guildPrefixes) {
@@ -139,8 +134,8 @@ export const buildCommandMetadata = (
   bot: IBotClient,
   message: IBotMessage,
   prefix: string,
-): CommandMetadata => {
-  const meta = {} as CommandMetadata;
+): ICommandMetadata => {
+  const meta = {} as ICommandMetadata;
 
   // Known props
   meta.isDM = message.channel.type === 'dm';
@@ -198,7 +193,7 @@ export class CooldownManager extends Collection<string, Collection<Snowflake, nu
   }
 
   loadCommands(commands: IBotClient['commands']) {
-    commands.forEach(cmd => {
+    commands.forEach((cmd) => {
       super.set(cmd.name.toLowerCase(), new Collection());
     });
   }

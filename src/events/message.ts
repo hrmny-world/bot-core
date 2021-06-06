@@ -11,7 +11,7 @@ export interface ICommandExtenders {
   metaExtenders: IMetaExtender[];
 }
 
-export const commandRunner = (extensions: ICommandExtenders, bot: BotClient) => async (
+export const makeCommandRunner = (extensions: ICommandExtenders, bot: BotClient) => async (
   message: IBotMessage,
 ) => {
   // Channel watchers

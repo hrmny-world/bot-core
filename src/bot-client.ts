@@ -1,7 +1,8 @@
-import { promisify, inspect } from 'util';
-import { Client, GuildChannel, ClientOptions, ClientEvents, Message } from 'discord.js';
+import { Client, GuildChannel, ClientOptions, ClientEvents } from 'discord.js';
 import Collection from '@discordjs/collection';
 import merge from 'lodash.merge';
+
+import { promisify, inspect } from 'util';
 import os from 'os';
 
 import { IBotClient, IEventHandler, IBotMessage } from './interfaces';
@@ -17,9 +18,16 @@ import {
   Task,
   Schedule,
 } from './modules';
-import { IPrefixChecker, ICommandExtenders, IMetaExtender, commandRunner } from './events/message';
-import * as events from './events';
-// import { webServer } from './web';
+
+import {
+  IPrefixChecker,
+  ICommandExtenders,
+  IMetaExtender,
+  makeCommandRunner,
+} from './events/message';
+
+import * as sensumInternalEvents from './events';
+import { EventHandler, wrapEventHandler } from './modules/event-handler';
 
 export class BotClient extends Client implements IBotClient {
   config: IBotClient['config'];
@@ -190,11 +198,11 @@ export class BotClient extends Client implements IBotClient {
 
   // ! Critical functions
 
-  async loadCommand(command: Command) {
+  loadCommand(command: Command) {
     try {
       this.emit('debug', `Loading Command: ${command.name}`);
       if (command.init) {
-        command.init(this);
+        command.init(this as any);
       }
       this.commands.set(command.name, command);
       this.cooldowns.set(command.name.toLowerCase(), new Collection());
@@ -206,89 +214,6 @@ export class BotClient extends Client implements IBotClient {
     }
   }
 
-  private async _loadCommandsIntoClient() {
-    const { root, debug, useTypescript } = this.config;
-    const cmdFiles = await FileLoader.loadDirectory({
-      ImportClass: Command,
-      dir: 'commands',
-      root,
-      debug,
-      useTypescript,
-    });
-
-    // Promise.all for performance
-    await Promise.all([...cmdFiles.map((cmd) => this.loadCommand(cmd as any))]);
-  }
-
-  private async _loadListenersIntoClient() {
-    const { root, debug, useTypescript } = this.config;
-    const listenerFiles = await FileLoader.loadDirectory({
-      ImportClass: Listener,
-      dir: 'listeners',
-      root,
-      debug,
-      useTypescript,
-    });
-
-    const makeName = (words: string | string[]): string => {
-      return Array.isArray(words) ? words.join(' ').toLowerCase() : words.toLowerCase();
-    };
-
-    const mappedListeners = listenerFiles.map((l: typeof Listener) => {
-      return [
-        makeName((l as unknown as Listener).words),
-        Object.assign(l, { name: makeName((l as unknown as Listener).words) }),
-      ];
-    });
-
-    const listeners: any = new Collection<string, Listener>(mappedListeners as any);
-    listeners.ignored = new ListenerIgnoreList(this);
-
-    this.botListeners = listeners;
-  }
-
-  private async _loadEventsIntoClient() {
-    const { root, debug, useTypescript } = this.config;
-    const evtFiles = await FileLoader.readDirectory({
-      dir: 'events',
-      root,
-      debug,
-      useTypescript,
-    });
-
-    evtFiles.forEach((filePath) => {
-      const splits = filePath.split(/(\/|\\)/g);
-      const eventName = splits[splits.length - 1].split('.')[0];
-      const requiredEventModule = module.require(filePath.replace(__dirname, './'));
-
-      let event: IEventHandler;
-      if (requiredEventModule && typeof requiredEventModule === 'function') {
-        event = requiredEventModule;
-      } else if (requiredEventModule && typeof requiredEventModule.default === 'function') {
-        event = requiredEventModule.default;
-      }
-
-      if (event!) {
-        // Bind the client to any event, before the existing arguments
-        // provided by the discord.js event.
-        this.on(eventName as keyof ClientEvents, event!.bind(null, this));
-      }
-    });
-  }
-
-  private async _loadTasksIntoClient() {
-    const { root, debug, useTypescript } = this.config;
-    const taskFiles = await FileLoader.loadDirectory({
-      ImportClass: Task,
-      dir: 'tasks',
-      root,
-      debug,
-      useTypescript,
-    });
-
-    this.schedule = new Schedule(this, taskFiles as unknown as Task[]);
-  }
-
   extend = {
     prefixChecking: (checker: IPrefixChecker) => {
       this.extensions.prefixCheckers.push(checker);
@@ -298,38 +223,77 @@ export class BotClient extends Client implements IBotClient {
     },
   };
 
-  async login(token: string) {
+  private async _loadSensumObjects() {
+    const { root, ignorePattern } = this.config;
+    const models: FileLoader.IModelDescription[] = [
+      {
+        name: 'commands',
+        regex: /\.command\.(js|ts)$/,
+        importClass: Command,
+      },
+      {
+        name: 'tasks',
+        regex: /\.task\.(js|ts)$/,
+        importClass: Task,
+      },
+      {
+        name: 'events',
+        regex: /\.event\.(js|ts)$/,
+        importClass: EventHandler,
+      },
+      {
+        name: 'listeners',
+        regex: /\.listener\.(js|ts)$/,
+        importClass: Listener,
+      },
+    ];
+    const projectFiles = await FileLoader.readAllFiles({ root, ignorePattern });
+    const { commands, tasks, events, listeners } = await FileLoader.requireSensumObjects(
+      root,
+      projectFiles,
+      models,
+    );
+
     // Here we load **commands** into memory, as a collection, so they're accessible
     // here and everywhere else.
-    await this._loadCommandsIntoClient();
-
-    // Then we load events, which will include our message and ready event.
-    await this._loadEventsIntoClient();
-
-    // Loads and starts tasks
-    await this._loadTasksIntoClient();
-
+    (commands as Command[]).forEach((cmd) => this.loadCommand(cmd));
     // Pass the command collection into the cooldowns manager.
     this.cooldowns.loadCommands(this.commands);
 
-    const runner = commandRunner(this.extensions, this) as unknown as (
-      ...args: ClientEvents['message']
-    ) => void;
+    // Start the scheduler with the imported tasks.
+    this.schedule = new Schedule(this, tasks as Task[]);
+
+    // Load events into client.
+    (events as EventHandler<any>[]).forEach((event) =>
+      this.on(event.name, wrapEventHandler(this, event)),
+    );
+
+    // Load listeners into client.
+    const mappedListeners = (listeners as Listener[]).map((listener) => [
+      listener.makeName(),
+      Object.assign(listener, { name: listener.makeName() }),
+    ]);
+
+    this.botListeners = new Collection<string, Listener>(mappedListeners as any) as any;
+    this.botListeners.ignored = new ListenerIgnoreList(this);
+    this._listenerRunner = new ListenerRunner(this, {});
+    this._listenerRunner.listen(this.extensions);
+  }
+
+  async login(token: string) {
+    await this._loadSensumObjects();
+
+    const runner = makeCommandRunner(this.extensions, this) as any;
 
     // Listen to commands
     this.on('message', runner);
-    this.on('messageUpdate', (_, message) => runner(message as Message));
-
-    await this._loadListenersIntoClient();
-    this._listenerRunner = new ListenerRunner(this, {});
-    this._listenerRunner.listen(this.extensions);
+    this.on('messageUpdate', (_, message) => runner(message));
 
     // Channel Watcher events
-    for (const [eventName, eventHandler] of Object.entries(events)) {
+    for (const [eventName, eventHandler] of Object.entries(sensumInternalEvents)) {
       this.on(eventName as keyof ClientEvents, (eventHandler as IEventHandler).bind(null, this));
     }
 
-    // call Discord.Client's login()
     return super.login(token);
   }
 }
