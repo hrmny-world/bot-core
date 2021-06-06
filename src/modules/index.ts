@@ -2,7 +2,7 @@ export {
   Command,
   CooldownManager,
   buildCommandMetadata,
-  splitArguments,
+  splitCommandAndArguments as splitArguments,
   validatePrefix,
 } from './command';
 

@@ -12,6 +12,8 @@ import {
   ClientEvents,
 } from 'discord.js';
 import Collection from '@discordjs/collection';
+import { ValidationSchema, ValidationError } from 'fastest-validator';
+import { Argv } from 'mri';
 
 import { IConfig } from './bot.config';
 import { Command, CooldownManager, ChannelWatcher } from './modules';
@@ -194,7 +196,7 @@ export interface ICommandOptions<T> {
   /**
    * List of required arguments. The length of this array will be the number of required arguments and the values will be the arg names.
    */
-  requiredArgs?: string[];
+  args?: ValidationSchema;
   /**
    * Wether the message that called this command should be deleted. Note: bot needs the appropriate permissions.
    */
@@ -337,11 +339,15 @@ export interface ICommandMetadata {
   /**
    * The arguments the command was called with.
    */
-  args: string[];
+  args: Record<string, unknown>;
+  /**
+   * The arguments the command was called with in CLI format.
+   */
+  cliArgs: Argv;
   /**
    * The first missing argument if not enough arguments.
    */
-  missingArg: string | null;
+  validationErrors: ValidationError[];
   /**
    * Was the command called from a dm?
    */

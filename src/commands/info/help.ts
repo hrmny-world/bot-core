@@ -11,12 +11,19 @@ export default new Command({
   permission: Permission.USER,
   runIn: ['text', 'dm'],
   usage: '[command name]',
+  args: {
+    command: {
+      type: 'string',
+      lowercase: true,
+      optional: true,
+    },
+  },
   examples: [' ', 'info', 'ping'],
   run(bot, message, meta) {
     const { args } = meta;
     // return help about specific command
-    if (args[0]) {
-      const search = args[0].toLowerCase();
+    if (args.command) {
+      const search = args.command as string;
       const command = bot.commands.get(search) || bot.commands.get(bot.aliases.get(search) || '');
       if (!command || (command.hidden && bot.permlevel(message) < 8)) {
         return this.send!(`I could not find the ${search} command.`);
@@ -48,6 +55,16 @@ export default new Command({
             '# Remove the brackets.\n' +
             '# {} = Required arguments\n' +
             '# [] = Optional arguments.```',
+          true,
+        );
+      }
+      if (command.args && Object.keys(command.args).length) {
+        embed.addField(
+          '🛠 Argments',
+          bot.lines(
+            ...Object.entries(command.args).map(([arg, val]) => `**${arg}** ${val.type ?? val}`),
+          ),
+          true,
         );
       }
       const addExamples = (exampleType: string) => {
@@ -86,7 +103,7 @@ export default new Command({
 
     const commandList = {};
 
-    bot.commands.forEach(c => {
+    bot.commands.forEach((c) => {
       (commandList as any)[c.category || 'other'] = [
         ...((commandList as any)[c.category || 'other'] || []),
         c,
@@ -95,9 +112,14 @@ export default new Command({
 
     const cats = Object.keys(commandList);
     cats.sort((a, b) => a.localeCompare(b));
-    cats.forEach(category => {
+    cats.forEach((category) => {
+      if (!(commandList as any)[category]?.length) return;
+      if (!(commandList as any)[category].filter((c: Command) => !c.hidden).length) return;
+
       embed.addField(
-        `${(bot.config.helpCategoryEmotes || {} as any)[category] || ':page_facing_up:'} ${category}`,
+        `${
+          (bot.config.helpCategoryEmotes || ({} as any))[category] || ':page_facing_up:'
+        } ${category}`,
         '>' +
           (commandList as any)[category]
             .filter((c: Command) => !c.hidden)

@@ -1,3 +1,8 @@
+import Collection from '@discordjs/collection';
+import { Snowflake } from 'discord.js';
+import mri from 'mri';
+import Validator, { ValidationError } from 'fastest-validator';
+
 import {
   ICommandOptions,
   Permission,
@@ -5,9 +10,9 @@ import {
   ICommandMetadata,
   IBotClient,
 } from '../interfaces';
-import Collection from '@discordjs/collection';
-import { Snowflake } from 'discord.js';
 import { SensumSchemaError } from '../errors';
+
+const validator = new Validator();
 
 /**
  * Represents a command.
@@ -32,7 +37,7 @@ export class Command<T = { [key: string]: any }> implements ICommandOptions<T> {
   cooldown: ICommandOptions<T>['cooldown'] = 3;
   runIn: ICommandOptions<T>['runIn'] = ['text'];
   hidden: ICommandOptions<T>['hidden'] = false;
-  requiredArgs: ICommandOptions<T>['requiredArgs'] = [];
+  args: ICommandOptions<T>['args'] = {};
   examples: ICommandOptions<T>['examples'] = [];
   category: ICommandOptions<T>['category'] = 'other';
   delete: ICommandOptions<T>['delete'] = false;
@@ -64,9 +69,9 @@ export class Command<T = { [key: string]: any }> implements ICommandOptions<T> {
  * @param {string} content The message's content.
  * @param {string} prefix The prefix used.
  * @example
- * splitArguments('!hello there friend', '!'); -> {name: 'hello', args: ['there', 'friend']}
+ * splitArguments('!hello there friend', '!'); -> {command: 'hello', args: ['there', 'friend']}
  */
-export const splitArguments = (
+export const splitCommandAndArguments = (
   content: string,
   prefix: string,
 ): { command: string | undefined; args: string[] } => {
@@ -148,7 +153,7 @@ export const buildCommandMetadata = (
   meta.time = new Date();
   meta.permLevel = bot.permlevel(message);
 
-  const { command, args } = splitArguments(message.content, prefix);
+  const { command, args } = splitCommandAndArguments(message.content, prefix);
 
   let cmd = bot.commands.get(command!);
   let isAlias = false;
@@ -157,21 +162,39 @@ export const buildCommandMetadata = (
     cmd = bot.commands.get(bot.aliases.get(command!)!);
   }
 
-  // Unknown props
   meta.command = cmd ?? null;
   meta.commandName = cmd?.name ?? null;
   meta.calledByAlias = isAlias;
-  meta.args = args;
+  meta.args = {};
+  meta.cliArgs = mri(args);
+
+  const requiredArgsInOrder = cmd?.args ? Object.keys(cmd?.args) : [];
+
   meta.content = args
-    .slice(cmd?.requiredArgs?.length ?? 0)
+    .slice(requiredArgsInOrder.length ?? 0)
     .join(' ')
     .trim(); // slice to skip required args
-  meta.contentFull = args.join(' ').trim(); // slice to skip required args
-  // puts the name of the first missing arg in missingArg
-  if (cmd?.requiredArgs?.length ?? 0 > args.length) {
-    meta.missingArg = cmd?.requiredArgs?.[args.length] ?? null;
-  } else {
-    meta.missingArg = null;
+  meta.contentFull = args.join(' ').trim();
+
+  if (cmd?.args) {
+    const params: Record<string, unknown> = {};
+    for (const [i, param] of Object.keys(cmd.args).entries()) {
+      params[param] = args[i];
+    }
+    const validationResult = validator.validate(params, cmd.args);
+    if (validationResult === true) {
+      meta.args = params;
+    } else {
+      // alternative validation with cli style args
+      const paramsAlt = Object.assign({}, params, meta.cliArgs);
+      const validationResultAlt = validator.validate(paramsAlt, cmd.args);
+      if (validationResultAlt === true) {
+        meta.args = paramsAlt;
+        delete meta.args._;
+      } else {
+        meta.validationErrors = validationResult as ValidationError[];
+      }
+    }
   }
 
   meta.prefix = prefix;

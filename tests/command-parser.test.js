@@ -45,36 +45,36 @@ describe('command parser', () => {
     });
   });
 
-  describe('split arguments', () => {
-    test('should be defined', () => {
-      expect(splitArguments).toBeDefined();
-    });
+  // describe('split arguments', () => {
+  //   test('should be defined', () => {
+  //     expect(splitArguments).toBeDefined();
+  //   });
     
-    test('empty string should yield empty command and args', () => {
-      expect(splitArguments('', '>')).toEqual({ command: '', args: [] });
-    });
+  //   test('empty string should yield empty command and args', () => {
+  //     expect(splitArguments('', '>')).toEqual({ command: '', args: [] });
+  //   });
 
-    test('valid string with command only should yield the command and empty args', () => {
-      expect(splitArguments('>simple', '>')).toEqual({ command: 'simple', args: [] });
-    });
-    test('valid string with command and 1 arg should yield the command and 1 arg', () => {
-      expect(splitArguments('>simple command', '>')).toEqual({
-        command: 'simple',
-        args: ['command'],
-      });
-    });
-    test('valid string with command and 2 args should yield the command and 2 args', () => {
-      expect(splitArguments('>simple command here', '>')).toEqual({
-        command: 'simple',
-        args: ['command', 'here'],
-      });
-    });
-    // spliArguments is used internally and only after prefix validation.
-    test('valid string with wrong prefix should yield wrong command and 3 args', () => {
-      expect(splitArguments('simple command here', '>')).toEqual({
-        command: 'imple',
-        args: ['command', 'here'],
-      });
-    });
-  });
+  //   test('valid string with command only should yield the command and empty args', () => {
+  //     expect(splitArguments('>simple', '>')).toEqual({ command: 'simple', args: [] });
+  //   });
+  //   test('valid string with command and 1 arg should yield the command and 1 arg', () => {
+  //     expect(splitArguments('>simple command', '>')).toEqual({
+  //       command: 'simple',
+  //       args: ['command'],
+  //     });
+  //   });
+  //   test('valid string with command and 2 args should yield the command and 2 args', () => {
+  //     expect(splitArguments('>simple command here', '>')).toEqual({
+  //       command: 'simple',
+  //       args: ['command', 'here'],
+  //     });
+  //   });
+  //   // spliArguments is used internally and only after prefix validation.
+  //   test('valid string with wrong prefix should yield wrong command and 3 args', () => {
+  //     expect(splitArguments('simple command here', '>')).toEqual({
+  //       command: 'imple',
+  //       args: ['command', 'here'],
+  //     });
+  //   });
+  // });
 });
