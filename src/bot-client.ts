@@ -281,7 +281,9 @@ export class BotClient extends Client implements IBotClient {
   }
 
   async login(token: string) {
-    await this._loadSensumObjects();
+    if (!this.config.skipFileLoading) {
+      await this._loadSensumObjects();
+    }
 
     const runner = makeCommandRunner(this.extensions, this) as any;
 

@@ -18,6 +18,7 @@ export interface IGuildDefaultSettings {
 export interface IConfig {
   root?: string;
   ignorePattern?: string;
+  skipFileLoading?: boolean;
   name?: string;
   useTypescript?: boolean;
   ownerID: Snowflake;

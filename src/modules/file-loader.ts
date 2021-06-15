@@ -17,6 +17,7 @@ export const readAllFiles = ({
       (err, files) => {
         if (err) {
           reject(err);
+          return;
         }
         resolve(files);
       },
