@@ -199,6 +199,8 @@ export class BotClient extends Client implements IBotClient {
   // ! Critical functions
 
   loadCommand(command: Command) {
+    if (!command) return;
+    if (!(command instanceof Command)) return;
     try {
       this.emit('debug', `Loading Command: ${command.name}`);
       if (command.init) {
@@ -210,7 +212,7 @@ export class BotClient extends Client implements IBotClient {
         this.aliases.set(alias, command.name);
       });
     } catch (e) {
-      this.emit('error', new Error(`Unable to load command ${command.name}: ${e}`));
+      this.emit('error', new Error(`Unable to load command ${command?.name}: ${e}`));
     }
   }
 
