@@ -1,5 +1,5 @@
 // export * from './interfaces';
-export * from './helpers';
+export * from './client/helpers';
 export * from './interfaces';
 export * from './bot.config';
 export * from './modules';

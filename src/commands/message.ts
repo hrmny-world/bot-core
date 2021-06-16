@@ -1,7 +1,9 @@
 import { TextChannel } from 'discord.js';
-import { BotClient, IBotMessage, validatePrefix, buildCommandMetadata, ILevelPerm } from '..';
+
 import { formatString, isObject, time } from '../util';
-import { CombinedMeta } from '../interfaces';
+import { CombinedMeta, IBotMessage } from '../interfaces';
+import { BotClient, ILevelPerm } from '..';
+import { validatePrefix, buildCommandMetadata } from './command';
 
 export type IPrefixChecker = (bot: BotClient, message: IBotMessage) => string | false;
 export type IMetaExtender = <T>(meta: CombinedMeta<T>) => void | Promise<void>;

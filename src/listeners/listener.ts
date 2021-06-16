@@ -1,12 +1,12 @@
 /* eslint-disable no-console */
-import { IBotMessage, IListenerOptions, CombinedMeta } from '../interfaces';
-import { BotClient } from '../bot-client';
 import Collection from '@discordjs/collection';
 import { Snowflake } from 'discord.js';
+import { IBotMessage, IListenerOptions, CombinedMeta } from '../interfaces';
+import { BotClient } from '../bot-client';
 import { isObject } from '../util';
-import { buildCommandMetadata } from './command';
-import { ICommandExtenders } from '../events/message';
 import { SensumSchemaError } from '../errors';
+import { buildCommandMetadata } from '../commands/command';
+import { ICommandExtenders } from '../commands/message';
 
 export const COMMON_EXPRESSIONS = {
   // TODO: find a way to add "me" in here

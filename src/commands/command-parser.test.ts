@@ -1,10 +1,4 @@
-const {
-  Command,
-  CooldownManager,
-  buildCommandMetadata,
-  splitArguments,
-  validatePrefix,
-} = require('../build/modules/command');
+import { validatePrefix } from './command';
 
 describe('command parser', () => {
   describe('validate prefix', () => {
@@ -17,61 +11,61 @@ describe('command parser', () => {
 
     test('return truthy if correct default prefix', () => {
       const message = { content: '>hello there' };
-      expect(validatePrefix(message, defaultPrefix)).toBeTruthy();
+      expect(validatePrefix(message as any, defaultPrefix)).toBeTruthy();
     });
     test('return truthy if correct custom prefix', () => {
       const message = { guild: { id: 'a guild id' }, content: '$hello there' };
-      expect(validatePrefix(message, defaultPrefix, customPrefixesMap)).toBeTruthy();
+      expect(validatePrefix(message as any, defaultPrefix, customPrefixesMap)).toBeTruthy();
     });
     test('return false if wrong default prefix', () => {
       const message = { content: '!hello there' };
-      expect(validatePrefix(message, defaultPrefix)).toBeFalsy();
+      expect(validatePrefix(message as any, defaultPrefix)).toBeFalsy();
     });
     test('return false if wrong custom prefix', () => {
       const message = { guild: { id: 'a guild id' }, content: '-hello there' };
-      expect(validatePrefix(message, defaultPrefix, customPrefixesMap)).toBeFalsy();
+      expect(validatePrefix(message as any, defaultPrefix, customPrefixesMap)).toBeFalsy();
     });
     test('return false if uses default prefix and has custom prefix', () => {
       const message = { guild: { id: 'a guild id' }, content: '>hello there' };
-      expect(validatePrefix(message, defaultPrefix, customPrefixesMap)).toBeFalsy();
+      expect(validatePrefix(message as any, defaultPrefix, customPrefixesMap)).toBeFalsy();
     });
     test('return prefix if correct prefix', () => {
       const message = { guild: { id: 'a guild id' }, content: '>hello there' };
-      expect(validatePrefix(message, defaultPrefix)).toEqual('>');
+      expect(validatePrefix(message as any, defaultPrefix)).toEqual('>');
     });
     test('return custom prefix if correct custom prefix', () => {
       const message = { guild: { id: 'a guild id' }, content: '$hello there' };
-      expect(validatePrefix(message, defaultPrefix, customPrefixesMap)).toEqual('$');
+      expect(validatePrefix(message as any, defaultPrefix, customPrefixesMap)).toEqual('$');
     });
   });
 
   // describe('split arguments', () => {
   //   test('should be defined', () => {
-  //     expect(splitArguments).toBeDefined();
+  //     expect(splitCommandAndArguments).toBeDefined();
   //   });
-    
+
   //   test('empty string should yield empty command and args', () => {
-  //     expect(splitArguments('', '>')).toEqual({ command: '', args: [] });
+  //     expect(splitCommandAndArguments('', '>')).toEqual({ command: '', args: [] });
   //   });
 
   //   test('valid string with command only should yield the command and empty args', () => {
-  //     expect(splitArguments('>simple', '>')).toEqual({ command: 'simple', args: [] });
+  //     expect(splitCommandAndArguments('>simple', '>')).toEqual({ command: 'simple', args: [] });
   //   });
   //   test('valid string with command and 1 arg should yield the command and 1 arg', () => {
-  //     expect(splitArguments('>simple command', '>')).toEqual({
+  //     expect(splitCommandAndArguments('>simple command', '>')).toEqual({
   //       command: 'simple',
   //       args: ['command'],
   //     });
   //   });
   //   test('valid string with command and 2 args should yield the command and 2 args', () => {
-  //     expect(splitArguments('>simple command here', '>')).toEqual({
+  //     expect(splitCommandAndArguments('>simple command here', '>')).toEqual({
   //       command: 'simple',
   //       args: ['command', 'here'],
   //     });
   //   });
   //   // spliArguments is used internally and only after prefix validation.
   //   test('valid string with wrong prefix should yield wrong command and 3 args', () => {
-  //     expect(splitArguments('simple command here', '>')).toEqual({
+  //     expect(splitCommandAndArguments('simple command here', '>')).toEqual({
   //       command: 'imple',
   //       args: ['command', 'here'],
   //     });

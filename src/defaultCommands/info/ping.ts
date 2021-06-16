@@ -1,4 +1,4 @@
-import { Command } from '../../modules';
+import { Command } from '../../commands/command';
 import { Permission } from '../../interfaces';
 
 export default new Command({

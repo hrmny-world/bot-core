@@ -1,5 +1,5 @@
 import { MessageEmbed } from 'discord.js';
-import { Command } from '../../modules';
+import { Command } from '../../commands/command';
 import { Permission } from '../../interfaces';
 
 // const { CATEGORY_EMOJIS } = require('../../util/constants.js');

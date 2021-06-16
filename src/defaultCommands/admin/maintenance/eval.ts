@@ -1,4 +1,4 @@
-import { Command } from '../../../modules';
+import { Command } from '../../../commands/command';
 
 export default new Command({
   name: 'eval',

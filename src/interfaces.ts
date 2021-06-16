@@ -14,13 +14,14 @@ import {
 import Collection from '@discordjs/collection';
 import { ValidationSchema, ValidationError } from 'fastest-validator';
 import { Argv } from 'mri';
+import { Job } from 'node-schedule';
 
 import { IConfig } from './bot.config';
-import { Command, CooldownManager, ChannelWatcher } from './modules';
 import { BotClient } from './bot-client';
-import { ListenerIgnoreList, Listener, ListenerRunner } from './modules/listener';
-import { Job } from 'node-schedule';
-import { Schedule } from './modules/tasks';
+import { ChannelWatcher } from '.';
+import { Command, CooldownManager } from './commands/command';
+import { Listener, ListenerIgnoreList, ListenerRunner } from './listeners/listener';
+import { Schedule } from './tasks/tasks';
 
 export type Overwrite<T, U> = Pick<T, Exclude<keyof T, keyof U>> & U;
 export type OmitPropertiesOfType<T, U> = { [K in keyof T]: T[K] extends U ? K : never }[keyof T];

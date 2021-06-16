@@ -7,27 +7,20 @@ import os from 'os';
 
 import { IBotClient, IEventHandler, IBotMessage } from './interfaces';
 import { defaultConfig, IConfig } from './bot.config';
-import {
-  FileLoader,
-  Command,
-  CooldownManager,
-  ChannelWatcher,
-  Listener,
-  ListenerIgnoreList,
-  ListenerRunner,
-  Task,
-  Schedule,
-} from './modules';
+import { FileLoader, ChannelWatcher } from './modules';
+import { Command, CooldownManager } from './commands/command';
+import { Schedule, Task } from './tasks/tasks';
+import { EventHandler, wrapEventHandler } from './events/event-handler';
+import { Listener, ListenerIgnoreList, ListenerRunner } from './listeners/listener';
 
 import {
   IPrefixChecker,
   ICommandExtenders,
   IMetaExtender,
   makeCommandRunner,
-} from './events/message';
+} from './commands/message';
 
 import * as sensumInternalEvents from './events';
-import { EventHandler, wrapEventHandler } from './modules/event-handler';
 
 export class BotClient extends Client implements IBotClient {
   config: IBotClient['config'];
@@ -283,7 +276,6 @@ export class BotClient extends Client implements IBotClient {
   }
 
   async login(token: string) {
-    console.log('token: ', token??this.config.token);
     if (!this.config.skipFileLoading) {
       await this._loadSensumObjects();
     }
