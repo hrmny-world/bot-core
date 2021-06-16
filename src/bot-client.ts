@@ -46,7 +46,7 @@ export class BotClient extends Client implements IBotClient {
     super(options);
 
     // Config
-    this.config = merge(defaultConfig, config);
+    this.config = merge({}, defaultConfig, config);
 
     // Command stuff
     this.commands = new Collection();
@@ -283,6 +283,7 @@ export class BotClient extends Client implements IBotClient {
   }
 
   async login(token: string) {
+    console.log('token: ', token??this.config.token);
     if (!this.config.skipFileLoading) {
       await this._loadSensumObjects();
     }
@@ -298,6 +299,6 @@ export class BotClient extends Client implements IBotClient {
       this.on(eventName as keyof ClientEvents, (eventHandler as IEventHandler).bind(null, this));
     }
 
-    return super.login(token);
+    return super.login(token ?? this.config.token);
   }
 }
