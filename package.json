@@ -5,7 +5,7 @@
   "main": "./build/index.js",
   "scripts": {
     "start": "node build/bot.js",
-    "test": "tsc --noEmit --pretty && jest --coverage && npm run lint && echo \"LOOKS LIKE EVERYTHING IS GOOD! 💚\"",
+    "test": "tsc --noEmit --pretty && jest && npm run lint && echo \"LOOKS LIKE EVERYTHING IS GOOD! 💚\"",
     "prebuild": "rimraf build",
     "build": "tsc",
     "lint": "eslint ./src/**/*.ts",

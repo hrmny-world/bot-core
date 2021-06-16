@@ -4,4 +4,6 @@ module.exports = {
   transform: {
     '^.+\\.(ts|tsx)$': 'ts-jest',
   },
+  collectCoverage: true,
+  collectCoverageFrom: ['**/*.{ts,js}', '!**/node_modules/**', '!**/vendor/**'],
 };
