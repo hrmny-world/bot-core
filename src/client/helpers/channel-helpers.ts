@@ -1,5 +1,5 @@
 import { GuildChannel } from 'discord.js';
-import { IBotMessage } from '../interfaces';
+import { IBotMessage } from '../../interfaces';
 
 export function getMentionedChannels(message: IBotMessage): GuildChannel[] {
   const channelRegex = /(?<=<#)(\d+?)(?=>)/g;

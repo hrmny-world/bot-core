@@ -1,5 +1,5 @@
 import { User, GuildMember, UserResolvable, Message } from 'discord.js';
-import { BotClient } from '../bot-client';
+import { BotClient } from '../..';
 
 /**
  * Tries to find an user's name.
