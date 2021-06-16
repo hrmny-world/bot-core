@@ -4,5 +4,5 @@ export * from './interfaces';
 export * from './bot.config';
 export * from './modules';
 export { BotClient } from './bot-client';
-export { default as defaultCommands } from './commands';
+export { default as defaultCommands } from './defaultCommands';
 export * from './errors';
