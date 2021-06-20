@@ -83,9 +83,12 @@ export const makeCommandRunner =
     // and return a friendly error message.
     if (meta.isDM && !meta.command.runIn?.includes('dm')) {
       try {
-        await message.channel.send(
-          'This command is unavailable via private message. Please run this command in a server.',
-        );
+        await message.channel
+          .send(formatString(bot.config.messages.COMMAND_FEEDBACK_SERVER_ONLY, meta.commandName))
+          .then(async (msg) => {
+            await wait(5000);
+            await msg.delete().catch(() => {});
+          });
         return;
       } catch {
         /* This is fine. */
@@ -98,9 +101,12 @@ export const makeCommandRunner =
       !(meta.command.runIn?.includes('text') || meta.command.runIn?.includes('guild'))
     ) {
       try {
-        await message.channel.send(
-          'This command is only available via private message. Please run this command in a DM.',
-        );
+        await message.channel
+          .send(formatString(bot.config.messages.COMMAND_FEEDBACK_DM_ONLY, meta.commandName))
+          .then(async (msg) => {
+            await wait(5000);
+            await msg.delete().catch(() => {});
+          });
         return;
       } catch {
         /* This is fine. */
@@ -125,13 +131,20 @@ export const makeCommandRunner =
       }
       const sendNoPermissionMessage = async () => {
         try {
-          await message.channel.send(
-            bot.lines(
-              'You do not have permission to use this command.',
-              `Your permission level is ${meta.permLevel} (${userPermLevel.name})`,
-              `This command requires level ${requiredPermLevel.level} (${requiredPermLevel.name})`,
-            ),
-          );
+          await message.channel
+            .send(
+              formatString(
+                bot.config.messages.COMMAND_FEEDBACK_MISSING_PERMISSION,
+                meta.permLevel,
+                userPermLevel.name,
+                requiredPermLevel.level,
+                requiredPermLevel.name,
+              ),
+            )
+            .then(async (msg) => {
+              await wait(5000);
+              await msg.delete().catch(() => {});
+            });
         } catch {
           /* This is fine. */
         }
@@ -143,16 +156,23 @@ export const makeCommandRunner =
     }
 
     if (meta.validationErrors) {
-      message.channel
+      await message.channel
         .send(
-          bot.lines(
-            `Looks like you have a ${
-              meta.validationErrors.length > 1 ? 'few problems' : 'problem'
-            } with your args.`,
-            ...meta.validationErrors.map((err) => `**${err.field}** (${err.type}): ${err.message}`),
+          formatString(
+            meta.validationErrors.length > 1
+              ? bot.config.messages.COMMAND_FEEDBACK_MISSING_ARGS_PLURAL
+              : bot.config.messages.COMMAND_FEEDBACK_MISSING_ARGS_SINGULAR,
+            bot.lines(
+              ...meta.validationErrors.map(
+                (err) => `**${err.field}** (${err.type}): ${err.message}`,
+              ),
+            ),
           ),
         )
-        .catch(() => {});
+        .then(async (msg) => {
+          await wait(5000);
+          await msg.delete().catch(() => {});
+        });
       return;
     }
 
@@ -160,13 +180,18 @@ export const makeCommandRunner =
 
     if (cooldownLeft > 0) {
       try {
-        await message.channel.send(
-          formatString(
-            bot.config.messages.COOLDOWN,
-            time.secondsToHumanReadable(cooldownLeft),
-            meta.commandName,
-          ),
-        );
+        await message.channel
+          .send(
+            formatString(
+              bot.config.messages.COOLDOWN,
+              time.secondsToHumanReadable(cooldownLeft),
+              meta.commandName,
+            ),
+          )
+          .then(async (cdMessage) => {
+            await wait(5000);
+            await cdMessage.delete().catch(() => {});
+          });
       } catch {
         /* This is fine. */
       }
@@ -246,3 +271,7 @@ export const makeCommandRunner =
     // If the command exists, **AND** the user has permission, run it.
     safelyRun(() => meta.command?.run(bot, message, meta), errorHandler);
   };
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

@@ -5,4 +5,5 @@ export { default as messageReactionAdd } from './messageReactionAdd';
 export { default as messageReactionRemove } from './messageReactionRemove';
 export { default as messageReactionRemoveAll } from './messageReactionRemoveAll';
 export { default as typingStart } from './typingStart';
+export * from './event-handler';
 // not exporting ./message.ts because it has the command runner

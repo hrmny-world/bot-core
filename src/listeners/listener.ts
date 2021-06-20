@@ -57,12 +57,21 @@ export class Listener<T = { [key: string]: any }> implements IListenerOptions<T>
   category: IListenerOptions<T>['category'];
   priority: IListenerOptions<T>['priority'];
   globalCooldown: IListenerOptions<T>['globalCooldown'];
+  maxMessageLength: IListenerOptions<T>['maxMessageLength'];
   run: IListenerOptions<T>['run'];
   init: IListenerOptions<T>['init'];
   _cooldowns: IListenerOptions<T>['_cooldowns'];
   send: any;
 
-  constructor({ words, cooldown, category, globalCooldown, priority, run }: IListenerOptions<T>) {
+  constructor({
+    words,
+    cooldown,
+    category,
+    globalCooldown,
+    maxMessageLength,
+    priority,
+    run,
+  }: IListenerOptions<T>) {
     if (!words || (!cooldown && cooldown !== 0) || !run) {
       throw new SensumSchemaError('A listener requires words, cooldown and a run function.');
     }
@@ -71,6 +80,7 @@ export class Listener<T = { [key: string]: any }> implements IListenerOptions<T>
     this.cooldown = cooldown;
     this._cooldowns = new Map();
     this.globalCooldown = globalCooldown || undefined;
+    this.maxMessageLength = Math.abs(maxMessageLength || Infinity);
     this.priority = Number(priority) || 0;
     this.run = run;
   }
@@ -284,6 +294,9 @@ export class ListenerRunner {
 
       const runListenersInCategory = async (listenersInThisCategory: Listener[]) => {
         for (const listener of listenersInThisCategory) {
+          if (message.content.length > listener.maxMessageLength!) {
+            continue;
+          }
           // inject safe send
           listener.send = (...args: any) => safeSend(...args);
           let result;

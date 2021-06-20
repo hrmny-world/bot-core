@@ -137,6 +137,10 @@ export interface IListenerOptions<T> {
    */
   globalCooldown?: number;
   /**
+   * Messages with lengths above this will not be processed.
+   */
+  maxMessageLength?: number;
+  /**
    * The method that will be run when the listener is triggered.
    */
   run(bot: IBotClient, message: IBotMessage, meta: CombinedMeta<T>): any;
