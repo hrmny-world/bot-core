@@ -1,5 +1,4 @@
-// const filesize = require('filesize');
-// const duration = require('humanize-duration');
+import isObject from '../../util/is-object';
 
 /**
  * Capitalizes the first letter in a string.
@@ -13,7 +12,7 @@ export function capitalize(str: string): string {
     return '';
   }
   const string = String(str).trim();
-  return string.replace(/[a-zA-Z]/, letter => letter.toUpperCase());
+  return string.replace(/[a-zA-Z]/, (letter) => letter.toUpperCase());
 }
 
 /**
@@ -27,7 +26,7 @@ export function capitalizeWords(str: string): string {
     return '';
   }
   const string = String(str).trim();
-  return string.replace(/^[a-z]|(?<=\s+|")[a-z]/gm, letter => letter.toUpperCase());
+  return string.replace(/^[a-z]|(?<=\s+|")[a-z]/gm, (letter) => letter.toUpperCase());
 }
 
 /**
@@ -41,13 +40,20 @@ export function capitalizeWords(str: string): string {
  * // Will return "Hello\nWorld"
  */
 export function lines(...stringLines: string[]) {
-  if (!stringLines || !stringLines.length) {
+  if (!stringLines || !stringLines.length || (stringLines.length === 1 && !stringLines[0])) {
     return '';
   }
   if (stringLines.length === 1) {
     return String(stringLines[0]).trim();
   }
-  return stringLines.reduce((all, current) => `${all}\n${String(current).trim()}`, '').trim();
+  return stringLines
+    .reduce((all, current) => {
+      if (current === null || current === undefined) {
+        return all;
+      }
+      return `${all}\n${String(current).trim()}`;
+    }, '')
+    .trim();
 }
 
 /**
@@ -75,5 +81,36 @@ export function numbers(str: string): number[] {
     .split(/ +/g);
 
   // converts everything to numbers and removes the NaN's
-  return string.map(n => parseFloat(n)).filter(n => !Number.isNaN(n));
+  return string.map((n) => parseFloat(n)).filter((n) => !Number.isNaN(n));
+}
+
+export function formatStringDict(str: string, dict: Record<string, unknown>): string {
+  if (!str || str.length === 0 || typeof str !== 'string') {
+    return '';
+  }
+  if (!dict || !isObject(dict)) {
+    return str;
+  }
+
+  let result = str;
+
+  const matches = str.match(/\{.+?\}/g);
+
+  if (!matches) {
+    return result;
+  }
+
+  const validValues = Object.keys(dict);
+
+  for (const match of matches) {
+    const key = match.replace(/[{}]/g, '');
+    // To prevent prototype pollution.
+    if (!validValues.includes(key)) {
+      continue;
+    }
+    const substitution = dict[key] || match;
+    result = result.replace(match, substitution as string);
+  }
+
+  return result;
 }
