@@ -293,6 +293,22 @@ export class ListenerRunner {
       const entries = Object.entries(this.mappedListeners);
 
       const runListenersInCategory = async (listenersInThisCategory: Listener[]) => {
+        const meta = buildCommandMetadata(bot, message as unknown as IBotMessage, '');
+        if (extensions.metaExtenders.length) {
+          for (const extension of extensions.metaExtenders) {
+            try {
+              const extended = extension(meta);
+              if (extended instanceof Promise) {
+                // await in for..of loop because this must be sequential
+                await extended;
+              }
+            } catch (err) {
+              err.message = 'A meta extension function threw an error.\n\n' + err.message;
+              bot.emit('error', err);
+              return;
+            }
+          }
+        }
         for (const listener of listenersInThisCategory) {
           if (message.content.length > listener.maxMessageLength!) {
             continue;
@@ -301,22 +317,6 @@ export class ListenerRunner {
           listener.send = (...args: any) => safeSend(...args);
           let result;
           try {
-            const meta = buildCommandMetadata(bot, message as unknown as IBotMessage, '');
-            if (extensions.metaExtenders.length) {
-              for (const extension of extensions.metaExtenders) {
-                try {
-                  const extended = extension(meta);
-                  if (extended instanceof Promise) {
-                    // await in for..of loop because this must be sequential
-                    await extended;
-                  }
-                } catch (err) {
-                  err.message = 'A meta extension function threw an error.\n\n' + err.message;
-                  bot.emit('error', err);
-                  return;
-                }
-              }
-            }
             const evaluation = listener.evaluate(message as unknown as IBotMessage, meta);
             // eslint-disable-next-line no-await-in-loop
             result = evaluation instanceof Promise ? await evaluation : evaluation;
