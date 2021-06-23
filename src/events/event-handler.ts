@@ -1,8 +1,7 @@
-import { ClientEvents } from 'discord.js';
 import { SensumSchemaError } from '../errors';
-import { IBotClient } from '../interfaces';
+import { IBotClient, IBotEvents } from '../interfaces';
 
-export class EventHandler<K extends keyof ClientEvents> {
+export class EventHandler<K extends keyof IBotEvents> {
   name: string;
   run: SensumEventHandler<K>;
   enabled: boolean;
@@ -30,9 +29,9 @@ export class EventHandler<K extends keyof ClientEvents> {
   }
 }
 
-export type SensumEventHandler<K extends keyof ClientEvents> = (
+export type SensumEventHandler<K extends keyof IBotEvents> = (
   bot: IBotClient,
-  ...args: ClientEvents[K]
+  ...args: IBotEvents[K]
 ) => void;
 
 export const wrapEventHandler =

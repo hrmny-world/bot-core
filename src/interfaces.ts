@@ -89,11 +89,12 @@ interface ExtendedClient {
 
 export interface IBotClient extends Overwrite<Client, ExtendedClient> {}
 
-interface IBotEvents
+export interface IBotEvents
   extends Overwrite<
     ClientEvents,
     {
       command: [ICommandMetadata];
+      listener: [Listener, ICommandMetadata];
       vote: [Object];
     }
   > {}

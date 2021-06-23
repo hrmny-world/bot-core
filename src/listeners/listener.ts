@@ -87,9 +87,9 @@ export class Listener<T = { [key: string]: any }> implements IListenerOptions<T>
 
   evaluate(message: IBotMessage, meta: CombinedMeta<T>) {
     const { author } = message;
-    if (author.bot) return false;
+    if (author.bot) return null;
     if (this.globalCooldown && Date.now() - (this._cooldowns.get('GLOBAL') || NaN) < 0)
-      return false;
+      return null;
     // if no records for this user or if off cooldown
     if (!this._cooldowns.get(author.id) || Date.now() - this._cooldowns.get(author.id)! > 0) {
       if (stringMatch(message, this.words)) {
@@ -104,7 +104,7 @@ export class Listener<T = { [key: string]: any }> implements IListenerOptions<T>
         return result;
       }
     }
-    return false;
+    return null;
   }
 
   makeName(): string {
@@ -254,7 +254,7 @@ export class ListenerRunner {
    * @memberof ListenerRunner
    */
   listen(extensions: ICommandExtenders) {
-    this.bot.on('message', (message) => {
+    this.bot.on('message', async (message) => {
       const bot = this.bot;
       const channel = () => message.channel;
       if (message.author.bot) return;
@@ -292,23 +292,24 @@ export class ListenerRunner {
 
       const entries = Object.entries(this.mappedListeners);
 
-      const runListenersInCategory = async (listenersInThisCategory: Listener[]) => {
-        const meta = buildCommandMetadata(bot, message as unknown as IBotMessage, '');
-        if (extensions.metaExtenders.length) {
-          for (const extension of extensions.metaExtenders) {
-            try {
-              const extended = extension(meta);
-              if (extended instanceof Promise) {
-                // await in for..of loop because this must be sequential
-                await extended;
-              }
-            } catch (err) {
-              err.message = 'A meta extension function threw an error.\n\n' + err.message;
-              bot.emit('error', err);
-              return;
+      const meta = buildCommandMetadata(bot, message as unknown as IBotMessage, '');
+      if (extensions.metaExtenders.length) {
+        for (const extension of extensions.metaExtenders) {
+          try {
+            const extended = extension(meta);
+            if (extended instanceof Promise) {
+              // await in for..of loop because this must be sequential
+              await extended;
             }
+          } catch (err) {
+            err.message = 'A meta extension function threw an error.\n\n' + err.message;
+            bot.emit('error', err);
+            return;
           }
         }
+      }
+
+      const runListenersInCategory = async (listenersInThisCategory: Listener[]) => {
         for (const listener of listenersInThisCategory) {
           if (message.content.length > listener.maxMessageLength!) {
             continue;
@@ -324,6 +325,9 @@ export class ListenerRunner {
             this.bot.emit('error', e);
             break;
           }
+          if (result === true || result === false) {
+            this.bot.emit('listener', listener, meta);
+          }
           if (result === true) {
             break;
           }
@@ -332,9 +336,10 @@ export class ListenerRunner {
 
       const runAllListeners = () => {
         for (const [category, listenersInThisCategory] of entries) {
-          runListenersInCategory(listenersInThisCategory).catch((err) =>
-            console.log(category, err),
-          );
+          runListenersInCategory(listenersInThisCategory).catch((err) => {
+            err.category = category;
+            bot.emit('error', err);
+          });
         }
       };
 
