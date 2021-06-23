@@ -87,9 +87,12 @@ export class Listener<T = { [key: string]: any }> implements IListenerOptions<T>
 
   evaluate(message: IBotMessage, meta: CombinedMeta<T>) {
     const { author } = message;
+    const guildId = message.guild?.id;
     if (author.bot) return null;
-    if (this.globalCooldown && Date.now() - (this._cooldowns.get('GLOBAL') || NaN) < 0)
-      return null;
+    if (guildId) {
+      if (this.globalCooldown && Date.now() - (this._cooldowns.get(`GUILD_${guildId}`) || NaN) < 0)
+        return null;
+    }
     // if no records for this user or if off cooldown
     if (!this._cooldowns.get(author.id) || Date.now() - this._cooldowns.get(author.id)! > 0) {
       if (stringMatch(message, this.words)) {
@@ -98,8 +101,8 @@ export class Listener<T = { [key: string]: any }> implements IListenerOptions<T>
         const result = this.run(message.client, message, meta);
         // set cooldown
         this._cooldowns.set(author.id, Date.now() + this.cooldown * 1000);
-        if (this.globalCooldown) {
-          this._cooldowns.set('GLOBAL', Date.now() + this.globalCooldown * 1000);
+        if (guildId && this.globalCooldown) {
+          this._cooldowns.set(`GUILD_${guildId}`, Date.now() + this.globalCooldown * 1000);
         }
         return result;
       }
