@@ -178,7 +178,7 @@ export class BotClient extends Client implements IBotClient {
   }
 
   get userCount() {
-    return this.users.cache.filter((u) => !u.bot).size;
+    return this.guilds.cache.map((g) => g.memberCount).reduce((a, b) => a + b, 0);
   }
 
   get serverCount() {
