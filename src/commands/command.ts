@@ -60,6 +60,15 @@ export class Command<T = { [key: string]: any }> implements ICommandOptions<T> {
     if (!('run' in options)) {
       throw new SensumSchemaError('A command must have a handler function.');
     }
+    if (options.args) {
+      try {
+        validator.validate({}, options.args);
+      } catch (err) {
+        throw new SensumSchemaError(
+          `Looks like you have a problem with your args schema in the "${options.name}" command. You can read more about how the validator works here: https://github.com/icebob/fastest-validator`,
+        );
+      }
+    }
     Object.assign(this, options);
   }
 }
@@ -181,19 +190,31 @@ export const buildCommandMetadata = (
     for (const [i, param] of Object.keys(cmd.args).entries()) {
       params[param] = args[i];
     }
-    const validationResult = validator.validate(params, cmd.args);
-    if (validationResult === true) {
-      meta.args = params;
-    } else {
-      // alternative validation with cli style args
-      const paramsAlt = Object.assign({}, params, meta.cliArgs);
-      const validationResultAlt = validator.validate(paramsAlt, cmd.args);
-      if (validationResultAlt === true) {
-        meta.args = paramsAlt;
-        delete meta.args._;
+    try {
+      const validationResult = validator.validate(params, cmd.args);
+      if (validationResult === true) {
+        meta.args = params;
       } else {
-        meta.validationErrors = validationResult as ValidationError[];
+        // alternative validation with cli style args
+        const paramsAlt = Object.assign({}, params, meta.cliArgs);
+        const validationResultAlt = validator.validate(paramsAlt, cmd.args);
+        if (validationResultAlt === true) {
+          meta.args = paramsAlt;
+          delete meta.args._;
+        } else {
+          meta.validationErrors = validationResult as ValidationError[];
+        }
       }
+    } catch (err) {
+      if (!err.message.match(/Invalid '.+?' type in validator schema/)) {
+        throw err;
+      }
+      bot.emit(
+        'error',
+        new Error(
+          `Looks like you have a problem with your args schema in the "${meta.commandName}" command.`,
+        ),
+      );
     }
   }
 
